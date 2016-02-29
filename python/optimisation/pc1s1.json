@@ -1,0 +1,128 @@
+{
+    "blockModel": {
+            "nodes": [80,70,100],
+            "sizes": [5.0,5.0,5.0]
+        },
+
+    "drawpoints": {
+            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/drawpoints.mat",
+            "dataset": "blockindices"
+        },
+
+
+    "density": {
+            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/density.mat",
+            "dataset": "density"
+        },
+
+    "nsr": {
+            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+            "dataset": "nsr"
+        },
+
+    "nsr_average": {
+            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+            "dataset": "nsr_average"
+        },
+
+    "metals": {
+        "cu": {
+            "name": "Cu",
+            "simulation" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/grade_simulations.mat",
+                "dataset" : "simulations/cu"
+            },
+
+            "concentrate" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/simulations.mat",
+                "dataset" : "cu/concentrated"
+            },
+
+            "recovery" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/simulations.mat",
+                "dataset" : "cu/recovery"
+            },
+
+            "nsr" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+                "dataset" : "cu/nsr"
+            },
+
+            "nsr_average" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+                "dataset" : "cu/nsr_average"
+            },
+            "deduction" : 1.0,
+            "payableRate" : 1.0,
+            "refiningCharge" : 0.08,
+            "price" : 1.7,
+            "unit2ton" : 2204.6
+
+        },
+        "au": {
+            "name": "Au",
+            "simulation" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/grade_simulations.mat",
+                "dataset" : "simulations/au"
+            },
+
+            "concentrate" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/simulations.mat",
+                "dataset" : "au/concentrated"
+            },
+
+            "recovery" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/simulations.mat",
+                "dataset" : "au/recovery"
+            },
+
+            "nsr" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+                "dataset" : "au/nsr"
+            },
+
+            "nsr_average" : {
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+                "dataset" : "au/nsr_average"
+            },
+            "deduction" : 1.0,
+            "payableRate" : 1.0,
+            "refiningCharge" : 6.0,
+            "price" : 650.0,
+            "unit2ton" : 0.03215
+        }
+    },
+
+    "deleterious": {
+        "fluorine":
+            {
+                "name": "F",
+                "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/simulations.mat",
+                "datasets": {
+                    "concentrates": "f/concentrated"
+                },            
+                "deduct" : 1.0,
+                "payableRate" : 0.100,
+                "refiningCharge" : 52.91,
+                "price" : 0.9
+            }
+    },
+    "periods" : 12,
+    "discount_rate": 0.1,
+    "smelterCharge" : 80.0,
+    "penalties" : 2.0,
+    "marketingCharge" : 0.0,
+    "freightCharge" : 35.0,
+    "nsim" : 500,
+    "units": 1,
+    "max_block_extraction": 300,
+    "production_targets" : 3.0,
+    "feed_production" : {
+            "minimum" :   7000.0,
+            "maximum" :   9000.0
+        },
+    "confidenceInterval": 0.90,
+    "mining_cost": 6.0    
+}
+
+

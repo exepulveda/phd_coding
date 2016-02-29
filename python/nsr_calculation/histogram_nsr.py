@@ -18,7 +18,8 @@ for i in xrange(m):
     data = dset_nsr[:,i]
     #plt.hist(data,9,normed=True)
     #plt.show()
-    print (i+1),np.min(data),np.mean(data),np.max(data)
+    #print (i+1),np.min(data),np.mean(data),np.max(data)
+    
 
 for i in xrange(n):
     data = dset_nsr[i,:]

@@ -94,7 +94,7 @@ if __name__ == "__main__":
             csv_writer[model_names[i]].writerow(row)
             
             #if np.abs(mean_error) <= error_limit[i]:
-            model_output[model_names[i]] += [(abs(mean_error),r2,model)]
+            model_output[model_names[i]] += [(abs(mean_error),r2,model,row)]
 
     #max_models = 10
 
@@ -104,18 +104,28 @@ if __name__ == "__main__":
 
 
 
+    output_filename = os.path.join(home_path,"optimisation/ppr_models/summary_selected_ppr_models.csv")
+    csv_writer = csv.writer(open(output_filename,"w"),delimiter=",")
     for output in model_names:
         mo = model_output[output]
         mo.sort()
         #mo.reverse()
         
         max_models = 50
+
+
         
         print output,len(mo)
         for i in xrange(max_models):
+            abs_mean_error,r2,model,row = model_output[output][i]
+            row.insert(0,output)
+            row.insert(0,str(i+1))
+            csv_writer.writerow(row)
+            
             fn = os.path.join(home_path,"optimisation/ppr_models/ppr_model_{name}_{number}.dump")
             with open(fn.format(name=output,number=i),"w") as fout:
                 pickle.dump(mo[i][2],fout,-1)
 
 
             print i,mo[i][0],mo[i][1]
+
