@@ -1,0 +1,3 @@
+python deap_opt_pc1s1.py --param=pc1s1.json --ipath=/home/esepulveda/Documents/projects/newcrest/optimisation/results --pop=500 --gen=100
+
+

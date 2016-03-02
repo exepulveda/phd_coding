@@ -13,17 +13,16 @@ import h5py
 import bcproblem
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--solution_file', required=True,type=str)    
+parser.add_argument('--solution_home', required=True,type=str)    
+parser.add_argument('--solution_name', required=False,type=str,default="output-geomet-sim-{0}")    
 parser.add_argument('--ipath', required=True,type=str)    
 parser.add_argument('--param', required=False,type=str,default="pc1s1.json")    
-parser.add_argument('--nsr_file', required=False,type=str,default="best_nsr_average_inputs.mat")    
-parser.add_argument('--nsr_ds', required=False,type=str,default="/average_input/nsr")    
+parser.add_argument('--nsr_file', required=False,type=str,default="nsr_B.mat")    
+parser.add_argument('--nsr_ds', required=False,type=str,default="nsr")    
     
 if __name__ == "__main__":
     args = parser.parse_args()
     
-    output_path = "./output-optimisation"
-
     ds_path = args.ipath
     json_parameters = args.param
 
@@ -46,32 +45,38 @@ if __name__ == "__main__":
     nsr_filename = os.path.join(ds_path,args.nsr_file)
     h5_nsr = h5py.File(nsr_filename, "r")
     #load simulation
-    nsr_data = h5_nsr[args.nsr_ds][:]
-    h5_nsr.close()
+    #h5_nsr.close()
 
     dp_blocks = []
     for i in xrange(ndp):
         indices = np.where(dp_blocks_data[i,:] >= 0)[0]
         dp_blocks += [dp_blocks_data[i,indices]]
 
-    #load solution
-    schedule = np.loadtxt(args.solution_file,delimiter=',')
-    assert (ndp == schedule.shape[0])
-    
-    _,nperiods = schedule.shape
-
-    bcp.setup_drawpoints(dp_blocks)
-    bcp.setup_periods(nperiods,0.1)
-
-    npv,tonnage = bcp.calculate_npv_tonnage(schedule,nsr_data)
-    
-    print "NSR:",np.sum(npv)
-    print "Tonnage:",np.sum(tonnage)
-
-    print "Period","Accumulated NSR","Tonnage"
-    
-    npv = np.cumsum(npv)
-    for i in xrange(nperiods):
-        print (i+1),npv[i],tonnage[i]
+    nsim = 50
+    #load solutions
+    for i in xrange(nsim):
+        solution_file = os.path.join(args.solution_home,args.solution_name.format(i),"solution-1.csv")
+        print "processing",solution_file
+        schedule = np.loadtxt(solution_file,delimiter=',')
+        assert (ndp == schedule.shape[0])
         
-    
+        _,nperiods = schedule.shape
+
+        bcp.setup_drawpoints(dp_blocks)
+        bcp.setup_periods(nperiods,0.1)
+
+        nsr_data = h5_nsr[args.nsr_ds][:,i]
+
+
+        npv,tonnage = bcp.calculate_npv_tonnage(schedule,nsr_data)
+        
+        print "NSR:",np.sum(npv)
+        print "Tonnage:",np.sum(tonnage)
+
+        print "Period","Accumulated NSR","Tonnage"
+        
+        npv = np.cumsum(npv)
+        for i in xrange(nperiods):
+            print (i+1),npv[i],tonnage[i]
+            
+        

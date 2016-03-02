@@ -1,6 +1,5 @@
 import sys
 
-sys.path += ["/home/esepulveda/Documents/projects/geostatpy"]
 sys.path += ["../base"]
 
 import argparse
@@ -55,69 +54,16 @@ def evaluate(individual):
     return ret
     
 parser = argparse.ArgumentParser()
+parser.add_argument('--sim', required=True,type=int)    
 parser.add_argument('--periods', required=False,type=int,default=12)    
 parser.add_argument('--pop', required=False,type=int,default=100)    
 parser.add_argument('--gen', required=False,type=int,default=100)    
 parser.add_argument('--cxpb', required=False,type=float,default=0.8)    
 parser.add_argument('--mutpb', required=False,type=float,default=0.2)    
-parser.add_argument('--ipath', required=False,type=str,default="../results")    
+parser.add_argument('--ipath', required=False,type=str,default="../../results")    
 parser.add_argument('--param', required=False,type=str,default="../data/pc1s1.json")    
+parser.add_argument('--opath', required=True,type=str)    
 parser.add_argument('--seed', required=False,type=int,default=1634120)    
-
-
-def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, save_halloffame = False,output_path = None):
-    logbook = tools.Logbook()
-    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
-
-    # Evaluate the individuals with an invalid fitness
-    invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-    for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
-
-    if halloffame is not None:
-        halloffame.update(population)
-
-    record = stats.compile(population) if stats else {}
-    logbook.record(gen=0, nevals=len(invalid_ind), **record)
-    if verbose:
-        print logbook.stream
-
-    # Begin the generational process
-    for gen in range(1, ngen + 1):
-        # Select the next generation individuals
-        offspring = toolbox.select(population, len(population))
-
-        # Vary the pool of individuals
-        offspring = algorithms.varAnd(offspring, toolbox, cxpb, mutpb)
-
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
-
-        # Update the hall of fame with the generated individuals
-        if halloffame is not None:
-            halloffame.update(offspring)
-
-        # Replace the current population by the offspring
-        population[:] = offspring
-
-        # Append the current generation statistics to the logbook
-        record = stats.compile(population) if stats else {}
-        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
-        if verbose:
-            print logbook.stream
-            
-        #save solution at each generation
-        if save_halloffame and output_path is not None:
-            for i,ind in enumerate(halloffame):
-                solution_path = os.path.join(output_path,"solution-{0}.csv".format(i+1))
-                np.savetxt(solution_path,ind.reshape(bcp.ndp,bcp.nperiods),fmt="%d",delimiter=",")
-
-    return population, logbook
     
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -125,7 +71,7 @@ if __name__ == "__main__":
     random.seed(args.seed)
     np.random.seed(args.seed)
     
-    output_path = "./output-optimisation"
+    output_path = "{0}-sim-{1}".format(args.opath,args.sim)
 
     ds_path = args.ipath
 
@@ -148,14 +94,12 @@ if __name__ == "__main__":
     ndp,max_blocks = dp_blocks_data.shape
     h5_dp.close()
 
-    nsr_filename = os.path.join(ds_path,"best_nsr_average_inputs.mat")
+    nsr_filename = os.path.join(ds_path,"nsr_average_inputs.mat")
     h5_nsr = h5py.File(nsr_filename, "r")
     #load simulation
-    nsr_data = h5_nsr["/average_input/nsr"][:]
+    nsr_data = h5_nsr["/average_input/nsr"][:,args.sim]
     h5_nsr.close()
 
-
-    
     dp_blocks = []
     for i in xrange(ndp):
         indices = np.where(dp_blocks_data[i,:] >= 0)[0]
@@ -166,10 +110,6 @@ if __name__ == "__main__":
     bcp.setup_drawpoints(dp_blocks)
     bcp.setup_periods(nperiods,0.1)
 
-    #schedule = np.random.randint(0,50,size=(ndp,nperiods))
-    
-    #ret = bcp.compute_objectives(schedule)
-    #print ret
 
     from deap import tools
     from deap import base, creator
@@ -180,15 +120,15 @@ if __name__ == "__main__":
 
     toolbox = base.Toolbox()
 
-    pool = multiprocessing.Pool()
-    toolbox.register("map", pool.map)
+    #pool = multiprocessing.Pool()
+    #toolbox.register("map", pool.map)
 
 
     toolbox.register("mate", cxTwoPointCopy)
     #toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=10, indpb=0.1)
     toolbox.register("mutate", tools.mutPolynomialBounded,eta=1,low=0, up=200, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=5)
-    #toolbox.register("select", tools.selRoulette)
+    toolbox.register("select", tools.selRoulette)
     toolbox.register("evaluate", evaluate)
     
 
@@ -212,19 +152,19 @@ if __name__ == "__main__":
     stats.register("min", np.min, axis=0)
     stats.register("max", np.max, axis=0)
     
+    #stats = None
+    print "Start evolution!!"
+    algorithms.eaSimple(pop, toolbox, cxpb=CXPB, mutpb=MUTPB, ngen=NGEN, stats=stats,
+                              halloffame=hof,verbose=True)
 
     #generate output
     try:
         os.makedirs(output_path)
     except:
         pass
-
-    #stats = None
-    print "Start evolution!!"
-    eaSimple(pop, toolbox, cxpb=CXPB, mutpb=MUTPB, ngen=NGEN, stats=stats,
-                              halloffame=hof,verbose=True,save_halloffame=True,output_path=output_path)
-
+    
     for i,ind in enumerate(hof):
         solution_path = os.path.join(output_path,"solution-{0}.csv".format(i+1))
-        np.savetxt(solution_path,ind.reshape(bcp.ndp,bcp.nperiods),fmt="%d",delimiter=",")        
+        np.savetxt(solution_path,ind.reshape(bcp.ndp,bcp.nperiods),fmt="%d",delimiter=",")
+        
         print i+1,ind.fitness.values[0]
