@@ -56,7 +56,7 @@ if __name__ == "__main__":
     #load solutions
     for i in xrange(nsim):
         solution_file = os.path.join(args.solution_home,args.solution_name.format(i),"solution-1.csv")
-        print "processing",solution_file
+        #print "processing",solution_file,"sim",i
         schedule = np.loadtxt(solution_file,delimiter=',')
         assert (ndp == schedule.shape[0])
         
@@ -70,13 +70,5 @@ if __name__ == "__main__":
 
         npv,tonnage = bcp.calculate_npv_tonnage(schedule,nsr_data)
         
-        print "NSR:",np.sum(npv)
-        print "Tonnage:",np.sum(tonnage)
-
-        print "Period","Accumulated NSR","Tonnage"
-        
-        npv = np.cumsum(npv)
-        for i in xrange(nperiods):
-            print (i+1),npv[i],tonnage[i]
-            
+        print (i+1),",",np.sum(npv)            
         

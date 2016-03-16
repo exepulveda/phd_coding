@@ -30,6 +30,7 @@ if __name__ == "__main__":
     cucn_pct = data[:,6]
     f_ppm = data[:,7]
     cu_s = data[:,8]
+    mo_pct = data[:,3] / 10000
 
     au_recleaner = data[:,16]
     cu_recleaner = data[:,17]
@@ -41,7 +42,8 @@ if __name__ == "__main__":
 
     n = data.shape[0]
 
-    inputs = [au_ppm,cu_pct,mo_ppm,fe_pct,s_pct,f_ppm,cucn_pct]
+    #inputs = [au_ppm,cu_pct,mo_ppm,fe_pct,s_pct,f_ppm,cucn_pct]
+    inputs = [au_ppm,cu_pct,mo_pct,fe_pct,s_pct,cucn_pct]
 
     x = np.empty((len(inputs),n))
     for i,inp in enumerate(inputs):
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     model_names = ["au_recleaner_concentrate","cu_recleaner_concentrate","f_recleaner_concentrate","au_rougher_recovery","cu_rougher_recovery"]
 
     #creating csv outputs
-    output_filename = os.path.join(home_path,"optimisation/ppr_models/summary_ppr_model_{output}.csv")
+    output_filename = os.path.join(home_path,"optimisation/ppr_models_5/summary_ppr_model_{output}.csv")
     
     csv_writer = {}
     model_output = {}
@@ -104,7 +106,7 @@ if __name__ == "__main__":
 
 
 
-    output_filename = os.path.join(home_path,"optimisation/ppr_models/summary_selected_ppr_models.csv")
+    output_filename = os.path.join(home_path,"optimisation/ppr_models_5/summary_selected_ppr_models.csv")
     csv_writer = csv.writer(open(output_filename,"w"),delimiter=",")
     for output in model_names:
         mo = model_output[output]
@@ -122,7 +124,7 @@ if __name__ == "__main__":
             row.insert(0,str(i+1))
             csv_writer.writerow(row)
             
-            fn = os.path.join(home_path,"optimisation/ppr_models/ppr_model_{name}_{number}.dump")
+            fn = os.path.join(home_path,"optimisation/ppr_models_5/ppr_model_{name}_{number}.dump")
             with open(fn.format(name=output,number=i),"w") as fout:
                 pickle.dump(mo[i][2],fout,-1)
 

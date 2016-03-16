@@ -29,7 +29,7 @@ if os.path.exists(os.path.join(ds_path,"grid3d.dump")):
             blockmodel3D = None
             
 #average grades
-grade_simulations_filename = os.path.join(ds_path,"grade_simulations.mat")
+grade_simulations_filename = os.path.join(ds_path,"average_grade_simulations.mat")
 h5_grade_simulations = h5py.File(grade_simulations_filename, "r")
 
 modelnames = [
@@ -39,6 +39,12 @@ modelnames = [
     ("au_rougher_recovery","au/recovery",7),
     ("cu_rougher_recovery","cu/recovery",23)  ]
 
+modelnames = [
+    ("au_recleaner_concentrate","au/concentrated",6),  #1,35,2,7,23
+    ("cu_recleaner_concentrate","cu/concentrated",3),
+    ("f_recleaner_concentrate","f/concentrated",1),
+    ("au_rougher_recovery","au/recovery",17),
+    ("cu_rougher_recovery","cu/recovery",23)  ]
 
 clip_values = {
     "au_recleaner_concentrate":(3.0,600.0),
@@ -49,14 +55,13 @@ clip_values = {
     }
 
 ds_inputs = h5_grade_simulations["/simulations"]
-n,nsim = ds_inputs["au"].shape
+n = ds_inputs["au"].shape[0]
 
-#nsim = 
 ngeomet = 50
 
-print "simulations shape",n,nsim,ngeomet
+print "simulations shape",n,ngeomet
 
-ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models"
+ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models_5"
 ppr_model = {}
 for modelname,_,_ in modelnames:
     ppr_model[modelname] = []
@@ -67,20 +72,17 @@ for modelname,_,_ in modelnames:
 
 assert (len(blockmodel3D) == n)
 
-au_inputs = ds_inputs["au"][:,:]
-cu_inputs = ds_inputs["cu"][:,:]
-s_inputs = ds_inputs["s"][:,:]
-cucn_inputs = ds_inputs["cucn"][:,:]
-fe_inputs = ds_inputs["fe"][:,:]
-mo_inputs = ds_inputs["mo"][:,:]
-f_inputs = ds_inputs["f"][:,:]
+au_inputs = ds_inputs["au"][:]
+cu_inputs = ds_inputs["cu"][:]
+s_inputs = ds_inputs["s"][:]
+cucn_inputs = ds_inputs["cucn"][:]
+fe_inputs = ds_inputs["fe"][:]
+mo_inputs = ds_inputs["mo"][:]
+f_inputs = ds_inputs["f"][:]
 
-inputs = np.empty((7,n))
-
-
-#create and populate geomet models with 50 grades and 50 geomet simulations
-nsr_filename = os.path.join(ds_path,"geomet_D.mat")
-if True:
+#create and populate geomet models with averages grades and 50 geomet simulations
+nsr_filename = os.path.join(ds_path,"geomet_C.mat")
+if False:
     h5nsr = h5py.File(nsr_filename, "a")
     for modelname,ds_name,_ in modelnames:
         h5nsr.create_dataset(ds_name, (n,nsim*ngeomet), dtype=np.float)
@@ -90,27 +92,31 @@ if True:
 
 h5nsr = h5py.File(nsr_filename, "r+")
 
-for k in xrange(nsim):
-    inputs.fill(-999)
+#inputs = np.empty((7,n))
+inputs = np.empty((6,n))
+inputs[0,:] = au_inputs[:]
+inputs[1,:] = cu_inputs[:]
+inputs[2,:] = mo_inputs[:] / 10000.0
+inputs[3,:] = fe_inputs[:]
+inputs[4,:] = s_inputs[:]
+#inputs[5,:] = f_inputs[:]
+#inputs[6,:] = cucn_inputs[:] / 10000.0
+inputs[5,:] = cucn_inputs[:] / 10000.0
 
-    inputs[0,:] = au_inputs[:,k]
-    inputs[1,:] = cu_inputs[:,k]
-    inputs[2,:] = mo_inputs[:,k]
-    inputs[3,:] = fe_inputs[:,k]
-    inputs[4,:] = s_inputs[:,k]
-    inputs[5,:] = f_inputs[:,k]
-    inputs[6,:] = cucn_inputs[:,k] / 10000.0
+for modelname,ds_name,_ in modelnames:
+    print "processing",ds_name,ngeomet
     
-    print "processing simulation",(k+1),"..."
+    ret_data = np.empty((n,ngeomet))
+    for k in xrange(ngeomet):
+        print "processing simulation",(k+1),"..."
 
-    for modelname,ds_name,_ in modelnames:
-        print "processing",ds_name,ngeomet
         ds = h5nsr[ds_name]
+
+        ret = ppr_model[modelname][k].predict(inputs)
+            
         dmin,dmax = clip_values[modelname]
-        for i in xrange(ngeomet):
-            ret = ppr_model[modelname][i].predict(inputs)
-            
-            simulation = k*ngeomet + i
-            
-            ds[:,simulation] = np.clip(ret,dmin,dmax)
+        
+        ret_data[:,k] = np.clip(ret,dmin,dmax)
+    
+    ds[:,:] = ret_data
                 

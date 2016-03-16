@@ -1,3 +1,11 @@
 python deap_opt_pc1s1.py --param=pc1s1.json --ipath=/home/esepulveda/Documents/projects/newcrest/optimisation/results --pop=500 --gen=100
 
+python stats_solution.py --solution_file ~/Documents/projects/newcrest/optimisation/nsr_max/output-B-sim-0/solution-1.csv --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_B.mat --nsr_ds nsr
 
+#
+python stats_solution.py --solution_file ~/Documents/projects/newcrest/optimisation/nsr_max/output-B-sim-0/solution-1.csv --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_A.mat --nsr_ds "average_input/nsr"
+
+
+python stats_solution_bestA_B.py --solution_file ~/Documents/projects/newcrest/optimisation/nsr_max/opt-scenario_B/solution-1.csv --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_B.mat --nsr_ds "nsr"
+
+python stats_many_solutions.py --solution_home ~/Documents/projects/newcrest/optimisation/nsr_max --solution_name opt-scenario_B --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_B.mat --nsr_ds nsr

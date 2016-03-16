@@ -16,7 +16,7 @@
         },
 
     "nsr": {
-            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr.mat",
+            "datafile": "/home/esepulveda/Documents/projects/newcrest/optimisation/results/nsr_D.mat",
             "dataset": "nsr"
         },
 

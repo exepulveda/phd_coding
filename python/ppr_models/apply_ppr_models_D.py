@@ -39,7 +39,13 @@ modelnames = [
     ("au_rougher_recovery","au/recovery",7),
     ("cu_rougher_recovery","cu/recovery",23)  ]
 
-
+modelnames = [
+    ("au_recleaner_concentrate","au/concentrated",6),  #1,35,2,7,23
+    ("cu_recleaner_concentrate","cu/concentrated",3),
+    ("f_recleaner_concentrate","f/concentrated",1),
+    ("au_rougher_recovery","au/recovery",17),
+    ("cu_rougher_recovery","cu/recovery",23)  ]
+    
 clip_values = {
     "au_recleaner_concentrate":(3.0,600.0),
     "cu_recleaner_concentrate":(10.0,60.0),
@@ -51,12 +57,12 @@ clip_values = {
 ds_inputs = h5_grade_simulations["/simulations"]
 n,nsim = ds_inputs["au"].shape
 
-#nsim = 
-ngeomet = 50
+nsim = 25
+ngeomet = 25
 
 print "simulations shape",n,nsim,ngeomet
 
-ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models"
+ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models_5"
 ppr_model = {}
 for modelname,_,_ in modelnames:
     ppr_model[modelname] = []
@@ -75,42 +81,52 @@ fe_inputs = ds_inputs["fe"][:,:]
 mo_inputs = ds_inputs["mo"][:,:]
 f_inputs = ds_inputs["f"][:,:]
 
-inputs = np.empty((7,n))
-
-
 #create and populate geomet models with 50 grades and 50 geomet simulations
 nsr_filename = os.path.join(ds_path,"geomet_D.mat")
 if True:
     h5nsr = h5py.File(nsr_filename, "a")
     for modelname,ds_name,_ in modelnames:
-        h5nsr.create_dataset(ds_name, (n,nsim*ngeomet), dtype=np.float)
+        h5nsr.create_dataset(ds_name, (n,nsim*ngeomet), dtype=np.float32)
 
     h5nsr.close()
 
 
 h5nsr = h5py.File(nsr_filename, "r+")
 
-for k in xrange(nsim):
-    inputs.fill(-999)
+batchsize = 56000
+data = np.empty((batchsize,nsim*ngeomet),dtype=np.float32)
+#inputs = np.empty((7,batchsize))
+inputs = np.empty((6,batchsize))
 
-    inputs[0,:] = au_inputs[:,k]
-    inputs[1,:] = cu_inputs[:,k]
-    inputs[2,:] = mo_inputs[:,k]
-    inputs[3,:] = fe_inputs[:,k]
-    inputs[4,:] = s_inputs[:,k]
-    inputs[5,:] = f_inputs[:,k]
-    inputs[6,:] = cucn_inputs[:,k] / 10000.0
+for modelname,ds_name,_ in modelnames:
+    ds = h5nsr[ds_name]
+    dmin,dmax = clip_values[modelname]
+    print "processing",ds_name,nsim*ngeomet
+
+    for b in xrange(10):
+        print "processing batch",(b+1)
+        bs = b*batchsize
+        be = bs + batchsize
     
-    print "processing simulation",(k+1),"..."
+        data.fill(-999)
+        for k in xrange(nsim):
+            inputs.fill(-999)
 
-    for modelname,ds_name,_ in modelnames:
-        print "processing",ds_name,ngeomet
-        ds = h5nsr[ds_name]
-        dmin,dmax = clip_values[modelname]
-        for i in xrange(ngeomet):
-            ret = ppr_model[modelname][i].predict(inputs)
+            inputs[0,:] = au_inputs[bs:be,k]
+            inputs[1,:] = cu_inputs[bs:be,k]
+            inputs[2,:] = mo_inputs[bs:be,k] / 10000.0
+            inputs[3,:] = fe_inputs[bs:be,k]
+            inputs[4,:] = s_inputs[bs:be,k]
+            #inputs[5,:] = f_inputs[bs:be,k]
+            #inputs[6,:] = cucn_inputs[bs:be,k] / 10000.0
+            inputs[5,:] = cucn_inputs[bs:be,k] / 10000.0
             
-            simulation = k*ngeomet + i
             
-            ds[:,simulation] = np.clip(ret,dmin,dmax)
+            for i in xrange(ngeomet):
+                ret = ppr_model[modelname][i].predict(inputs)
                 
+                simulation = k*ngeomet + i #iterate first on geomet and then over grades
+                
+                data[:,simulation] = np.clip(ret,dmin,dmax)
+                
+        ds[bs:be,:] = data

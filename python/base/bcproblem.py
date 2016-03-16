@@ -104,69 +104,37 @@ class BlockCavingProblem(object):
 
         self.tonnage = np.empty(self.bm.n)
 
-        '''
-        for i in xrange(n):
-            element = node[i]
+        nperiods = root["periods"]
+        
+        #loading Drawpoint
+        try:
+            dp_filename = root["drawpoints"]["datafile"]
+            h5_dp = h5py.File(dp_filename, "r")
+            dp_blocks_data = h5_dp[root["drawpoints"]["dataset"]][:,:]
+            ndp,max_blocks = dp_blocks_data.shape
+            h5_dp.close()
+        except Exception as e:
+            print "problem to open",dp_filename,root["drawpoints"]["dataset"]
+            raise e
+            
+        dp_blocks = []
+        for i in xrange(ndp):
+            indices = np.where(dp_blocks_data[i,:] >= 0)[0]
+            dp_blocks += [dp_blocks_data[i,indices]]
 
-            name = str(element["name"])
-            self.deduct[i] = float(element["deduction"])
-            self.payableRate[i] = float(element["payableRate"])
-            self.refiningCharge[i] = float(element["refiningCharge"])
-            self.refiningCostConvertion[i] = float(1.0)
-            self.price[i] = float(element["price"])
+        self.setup_drawpoints(dp_blocks)
+        self.setup_periods(nperiods,root["discount_rate"])        
 
-            with h5py.File(element["datafile"],"r") as df:
-                #grades
-                ds_name = element["datasets"]["grade"]
-                ds_shape = df[ds_name].shape
-                assert(ds_shape[-1] == self.bm.n)
-                #create array if needed
-                if self.grades is None:
-                    ds_shape = list([n]) + list(ds_shape)
-                    self.grades = np.empty(ds_shape)
-                self.grades[i] = np.array(df[ds_name])
-                #concentrates
-                ds_name = element["datasets"]["concentrate"]
-                ds_shape = df[ds_name].shape
-                assert(ds_shape[-1] == self.bm.n)
-                #create array if needed
-                if self.concentrates is None:
-                    ds_shape = list([n]) + list(ds_shape)
-                    self.concentrates = np.empty(ds_shape)
-                self.concentrates[i] = np.array(df[ds_name])
-                #recovery
-                ds_name = element["datasets"]["recovery"]
-                ds_shape = df[ds_name].shape
-                assert(ds_shape[-1] == self.bm.n)
-                #create array if needed
-                if self.recovery is None:
-                    ds_shape = list([n]) + list(ds_shape)
-                    self.recovery = np.empty(ds_shape)
-                self.recovery[i] = np.array(df[ds_name])
-                #nsr
-                ds_name = element["datasets"]["nsr"]
-                ds_shape = df[ds_name].shape
-                assert(ds_shape[-1] == self.bm.n)
-                #create array if needed
-                if self.nsr is None:
-                    ds_shape = list([n]) + list(ds_shape)
-                    self.nsr = np.empty(ds_shape)
-                self.nsr[i] = np.array(df[ds_name])
-                #nsr_average
-                ds_name = element["datasets"]["nsr_average"]
-                ds_shape = df[ds_name].shape
-                assert(ds_shape[-1] == self.bm.n)
-                #create array if needed
-                if self.nsr_average is None:
-                    ds_shape = list([n]) + list(ds_shape)
-                    self.nsr_average = np.empty(ds_shape)
-                self.nsr_average[i] = np.array(df[ds_name])
-        '''
+        if load_nsr:
+            nsr_filename = root["nsr"]["datafile"]
+            h5_nsr = h5py.File(nsr_filename, "r")
+            #load simulation
+            self.nsr = np.array(h5_nsr[root["nsr"]["dataset"]])
+            h5_nsr.close()
+
         self.mining_cost = root["mining_cost"]
 
-
         element = root["density"]
-
         with h5py.File(element["datafile"],"r") as df:
             #density
             ds_name = element["dataset"]
@@ -175,22 +143,6 @@ class BlockCavingProblem(object):
         #logger.debug("dimension of production: %s",str(ndim))
         #self.production = self.production.flatten(axis=ndim[:-1])
 
-        if load_nsr:
-            #nsr
-            element = root["nsr"]
-            with h5py.File(element["datafile"],"r") as df:
-                #detailed nsr
-                ds_name = element["dataset"]
-                self.nsr = np.array(df[ds_name])
-
-            #average nsr
-            element = root["nsr_average"]
-            with h5py.File(element["datafile"],"r") as df:
-                #detailed nsr
-                ds_name = element["dataset"]
-                self.nsr_average = np.array(df[ds_name])
-
-        
         
         #logger.info("Total tonnage = %s",np.sum(self.tonnage))
 
@@ -503,11 +455,13 @@ class BlockCavingProblem(object):
 
         return (npv_sim,cvar)
 
-    def calculate_maximum_npv(self,schedule,nsr=None):
+    def calculate_maximum_nsr(self,schedule,nsr=None):
         if nsr is None:
             nsr_data = self.nsr_average
         else:
             nsr_data = nsr
+
+        assert (len(nsr_data.shape) == 1)
 
         npv = 0.0
         
@@ -517,7 +471,6 @@ class BlockCavingProblem(object):
             prevExtractions = 0
 
             dp = self.drawpoints[i]
-            totalTonnage = 0.0
             for j in xrange(0,self.nperiods):
                 nBlocksToExtract = self.units * schedule[i,j]
                  
@@ -546,6 +499,54 @@ class BlockCavingProblem(object):
             npv = np.sum(tonnage[indices_less] - self.minimum_feed_production) - np.sum(tonnage[indices_more] - self.maximum_feed_production)
 
         return npv,
+
+    def calculate_maximum_average_nsr(self,schedule,nsr=None):
+        if nsr is None:
+            nsr_data = self.nsr
+        else:
+            nsr_data = nsr
+
+        #nsr values must be 2D
+        assert (len(nsr_data.shape) == 2)
+        n,nsim = nsr_data.shape
+
+        nsr = np.zeros(nsim)
+        
+        tonnage = np.zeros(self.nperiods)
+
+        for i in xrange(self.ndp):
+            prevExtractions = 0
+
+            dp = self.drawpoints[i]
+            for j in xrange(0,self.nperiods):
+                nBlocksToExtract = self.units * schedule[i,j]
+                 
+                blocks = dp.extraction(prevExtractions,nBlocksToExtract)
+                extractedBlocks = len(blocks)
+                prevExtractions += extractedBlocks
+                schedule[i,j] = extractedBlocks
+
+                if (extractedBlocks > 0):
+                    ton_blocks = self.tonnage[blocks] / 1.0e3
+                    tonnage[j] += np.sum(ton_blocks)
+
+                    '''npv'''
+                    nsr_blocks = nsr_data[blocks,:]
+                    nsr_sum = np.sum((nsr_blocks.T * ton_blocks),axis=1) * (self.discount[j] / 1.0e3)
+                    #npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks))
+                        
+                    nsr += nsr_sum
+                    
+        #print np.min(tonnage),np.max(tonnage),self.minimum_feed_production,self.maximum_feed_production
+        indices_less = np.where(tonnage < self.minimum_feed_production)[0]
+        indices_more = np.where(tonnage > self.maximum_feed_production)[0]
+
+        if len(indices_less) > 0 or len(indices_more) > 0:
+            tonnage_deviation = np.sum(tonnage[indices_less] - self.minimum_feed_production) - np.sum(tonnage[indices_more] - self.maximum_feed_production)
+
+            return tonnage_deviation,
+        else:
+            return np.mean(nsr),
 
     def calculate_npv_tonnage(self,schedule,nsr=None):
         if nsr is None:
