@@ -4,8 +4,8 @@
 #include "IntArrayIndividual.h"
 #include "Population.h"
 
-double evaluateOnes(Individual &ind) {
-    IntArrayIndividual *individual = (IntArrayIndividual *)&ind;
+double evaluateOnes(Individual *ind) {
+    IntArrayIndividual *individual = (IntArrayIndividual *)ind;
     
     int ones = 0;
     for (int i=0;i<individual->size();i++) {

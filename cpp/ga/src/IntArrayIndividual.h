@@ -11,9 +11,9 @@ using namespace std;
 
 class IntArrayIndividual: public Individual {
 protected:
-    int *gene;
 
 public:
+    int *gene;
     IntArrayIndividual(const size_t N);
 
     virtual ~IntArrayIndividual();

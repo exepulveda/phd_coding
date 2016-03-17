@@ -42,14 +42,14 @@ void Population::initialize() {
     //first evaluation
     #pragma omp parallel for
     for (int i=0;i<size_;i++) {
-        individuals[i]->fitness = this->evaluator_(*individuals[i]);
+        individuals[i]->fitness = this->evaluator_(individuals[i]);
     }
 
-    printf("Initial population\n");
+    //printf("Initial population\n");
     //set best individual
     setNewBest(individuals[0]);
     for (int i=1;i<size_;i++) {
-        individuals[i]->print();
+        //individuals[i]->print();
         if (bestIndividual->fitness < individuals[i]->fitness) {
             setNewBest(individuals[i]);
         }
@@ -99,17 +99,17 @@ void Population::evolve() {
         
         rnd = randomf();
         if (rnd < crossoverProb_) {
-            printf("performing crossover: [%f] < [%f]\n",rnd,crossoverProb_);
+            //printf("performing crossover: [%f] < [%f]\n",rnd,crossoverProb_);
             crossover(parent1,parent2,child1, child2);
-            parent1->print();
-            parent2->print();
-            child1->print();
-            child2->print();
+            //parent1->print();
+            //parent2->print();
+            //child1->print();
+            //child2->print();
 
         } else {
             //printf("no crossover: [%f] < [%f]\n",rnd,crossoverProb_);
-            //child1.copy(parent1);
-            //child2.copy(parent2);
+            child1->copy(parent1);
+            child2->copy(parent2);
         }
         //printf("(1.1) Best individual at the moment: %f\n",bestIndividual->fitness);
     }
@@ -129,8 +129,8 @@ void Population::evolve() {
     #pragma omp parallel for
     for (int i=0;i<size_;i++) {
         //offspring.get(i).fitness = this->evaluator_(offspring.get(i));
-        this->evaluator_(offspring.getRef(i));
-        offspring.getRef(i).print();
+        this->evaluator_(offspring.getPtr(i));
+        //offspring.getRef(i).print();
     }
 
     
@@ -167,7 +167,7 @@ void Population::setNewBest(Individual* newbest) {
     bestIndividual->copy(newbest);
     
     printf("best new fitness=%f (was %f)\n",bestIndividual->fitness,prev);
-    bestIndividual->print();
+    //bestIndividual->print();
     
 }
 

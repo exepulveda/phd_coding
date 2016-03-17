@@ -8,7 +8,7 @@
 
 using namespace std;
 
-typedef double (*evaluation_function_type)(Individual &);
+typedef double (*evaluation_function_type)(Individual *);
 
 class Population {
 public:
@@ -28,6 +28,7 @@ public:
     size_t size() { return size_; }
     
     Individual& getBest() { return *bestIndividual; }
+    Individual* getBestPtr() { return bestIndividual; }
 
     //void set(int i, Individual& ind) { individuals[i] = ind; }
     

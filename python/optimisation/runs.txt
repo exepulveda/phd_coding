@@ -9,3 +9,7 @@ python stats_solution.py --solution_file ~/Documents/projects/newcrest/optimisat
 python stats_solution_bestA_B.py --solution_file ~/Documents/projects/newcrest/optimisation/nsr_max/opt-scenario_B/solution-1.csv --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_B.mat --nsr_ds "nsr"
 
 python stats_many_solutions.py --solution_home ~/Documents/projects/newcrest/optimisation/nsr_max --solution_name opt-scenario_B --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1.json --nsr_file nsr_B.mat --nsr_ds nsr
+
+
+#best solutino scenario A
+python stats_solution.py --solution_file ~/Documents/projects/newcrest/optimisation/nsr_max/output-optimisation-2/solution-1.csv --ipath ~/Documents/projects/newcrest/optimisation/results --param pc1s1_A.json --nsr_file ~/Documents/projects/newcrest/optimisation/results/nsr_A.mat --nsr_ds nsr
