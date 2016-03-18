@@ -20,6 +20,9 @@ public:
     void evolve();
     void initialize();
     
+    void nsga2(int ngen);
+
+    
     Individual& getRef(int i);
     Individual* getPtr(int i);
     
@@ -40,12 +43,15 @@ private:
     Individual* select();
     void crossover(Individual* parent1,Individual* parent2,Individual* child1, Individual* child2);
     void mutate(Individual* individual);
-    
+    void append(Population *other);
     float mutationProb_;
     float crossoverProb_;
     float indProb_;
     int minvalue_;
     int maxvalue_;
+
+    Individual* selectNSGA2();
+
     
     evaluation_function_type evaluator_;
     

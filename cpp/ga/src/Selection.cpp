@@ -11,19 +11,35 @@ Individual* TournamentSelection(Population *population,int k) {
     //select first
     int sel = randomint(0,popSize-1);
     Individual* selected = population->getPtr(sel);
-    double max_fitness = selected->fitness;
-
-    //printf("Selected: %d:%f\n",0,selected.fitness);
-
     
-    for (int i=1;i<k;i++) {
-        sel = randomint(0,popSize-1);
-        Individual* ind = population->getPtr(sel);
+    if (selected->nobj == 1) {
+        double max_fitness = selected->fitness[0];
+
+        //printf("Selected: %d:%f\n",0,selected.fitness);
+
         
-        //printf("Select: %d:%f\n",i,ind.fitness);
-        if (ind->fitness > max_fitness) {
-            max_fitness = ind->fitness;
-            selected = ind;
+        for (int i=1;i<k;i++) {
+            sel = randomint(0,popSize-1);
+            Individual* ind = population->getPtr(sel);
+            
+            //printf("Select: %d:%f\n",i,ind.fitness);
+            if (ind->fitness[0] > max_fitness) {
+                max_fitness = ind->fitness[0];
+                selected = ind;
+            }
+        }
+    } else {
+        for (int i=1;i<k;i++) {
+            sel = randomint(0,popSize-1);
+            Individual* ind = population->getPtr(sel);
+
+            if (ind->rank < selected->rank) {
+                selected = ind;
+            } else if (ind->rank == selected->rank) {
+                if (ind->crowdDistance > selected->crowdDistance) {
+                    selected = ind;
+                }
+            }
         }
     }
 

@@ -14,7 +14,7 @@ protected:
 
 public:
     int *gene;
-    IntArrayIndividual(const size_t N);
+    IntArrayIndividual(const size_t N,int nobj=1,int nconst=0);
 
     virtual ~IntArrayIndividual();
       
@@ -30,7 +30,7 @@ public:
     void copy(Individual *other);
 
     Individual *clone() {
-        IntArrayIndividual *newobj = new IntArrayIndividual(size());
+        IntArrayIndividual *newobj = new IntArrayIndividual(size(),nobj,nconst);
         newobj->copy(*this);
         return newobj;
     }
@@ -44,13 +44,21 @@ public:
         }       
     }
     
-    void print() {
-        int s=0;
-        for (int i=0;i<size();i++) {
-            printf("%d|",gene[i]);
-            s += gene[i];
+    void print(bool printGene = false) {
+        if (printGene) {
+            for (int i=0;i<size();i++) {
+                printf("%d|",gene[i]);
+            }
         }
-        printf("fitness=%f|%d\n",fitness,s);
+        printf("fitness|");
+        for (int i=0;i<nobj;i++) {
+            printf("[%d]=%f|",i,fitness[i]);
+        }
+        printf("constrains|");
+        for (int i=0;i<nconst;i++) {
+            printf("[%d]=%f|",i,constrains_[i]);
+        }
+        printf("\n");
     }
     
 };

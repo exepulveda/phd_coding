@@ -50,9 +50,9 @@ double evaluate(Individual *ind) {
 
     
     if (deviation < 0) {
-        ind->fitness = deviation;
+        ind->fitness[0] = deviation;
     } else {
-        ind->fitness = nsr;
+        ind->fitness[0] = nsr;
     }
     
     //create umatrix with blocks
@@ -73,7 +73,7 @@ double evaluate(Individual *ind) {
 
     //ind->constr_violation = ind->constr[0];
 
-    return ind->fitness;
+    return ind->fitness[0];
 
     
     //imat schedule(bcp.ndp,bcp.nperiods);
@@ -144,12 +144,12 @@ int main (int argc, char **argv) {
     
     population.setup(0,200,0.9,0.2,0.05);
     population.initialize();
-    printf("Initial Best individual fitness=%f\n",population.getBest().fitness);
+    printf("Initial Best individual fitness=%f\n",population.getBest().fitness[0]);
 
     for (int i=0;i<generations;i++) {
         printf("Processing generation %d\n",i+1);
         population.evolve();
-        printf("Best individual fitness=%f\n",population.getBest().fitness);
+        printf("Best individual fitness=%f\n",population.getBest().fitness[0]);
     }
 
     printf("Best individual:\n");

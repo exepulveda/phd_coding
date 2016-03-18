@@ -5,4 +5,5 @@ add_subdirectory (ga)
 add_subdirectory (blockcaving)
 add_subdirectory (example1)
 add_subdirectory (blockcaving_so)
+add_subdirectory (blockcaving_mo)
 

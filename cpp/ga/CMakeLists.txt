@@ -1,4 +1,14 @@
-add_library(ga src/Random.cpp src/Selection.cpp src/Mutation.cpp src/Crossover.cpp src/Population.cpp src/Individual.cpp src/IntArrayIndividual.cpp)
+add_library(ga 
+        src/Random.cpp 
+        src/Selection.cpp 
+        src/Mutation.cpp 
+        src/Crossover.cpp 
+        src/Population.cpp 
+        src/Individual.cpp 
+        src/IntArrayIndividual.cpp
+        src/CrowdDistance.cpp
+        src/FrontRank.cpp
+    )
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
