@@ -8,14 +8,16 @@ void Individual::copy(Individual *other) {
     fitness = other->fitness; 
     constrains_ = other->constrains_; 
     size_ = other->size_; 
+    rank = other->rank;
+    crowdDistance = other->crowdDistance;
 }
 
 
 bool Individual::dominates(Individual *b) { 
-    int flag1; //at least one objective is improved
-    int flag2; //at least one objective is worse
-    flag1 = 0;
-    flag2 = 0;
+    bool flag1; //at least one objective is improved
+    bool flag2; //at least one objective is worse
+    flag1 = false;
+    flag2 = false;
     Individual *a = this;
     
     if (a->constrains() <0 && b->constrains()<0) { //both infeasible
@@ -30,15 +32,15 @@ bool Individual::dominates(Individual *b) {
         return true;
     } else { //both are feasible
         for (int i=0; i<nobj; i++) {
-            if (a->fitness[i] > b->fitness[i]) {
-                flag1 = 1;
-            } else if (a->fitness[i] < b->fitness[i]) {
-                flag2 = 1;
+            if (a->fitness[i] > b->fitness[i]) { //one objective is improved
+                flag1 = true;
+            } else if (a->fitness[i] < b->fitness[i]) { //one objective is worse
+                flag2 = true;
             }
-        } if (flag1==1 && flag2==0) {
+        } if (flag1 && !flag2) {
             return true;
-        } else if (flag1==0 && flag2==1) {
-            return false;
+        //} else if (flag1==0 && flag2==1) {
+        //    return false;
         } else {
             return false; //equals
         }

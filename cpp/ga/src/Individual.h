@@ -34,7 +34,7 @@ class Individual {
         virtual void randomize(int minvalue,int maxvalue) = 0;
         
         virtual Individual *clone() = 0;
-        virtual void print(bool printGene = false) = 0;
+        virtual void print(int tag = -1,bool printGene = false) = 0;
 
         virtual bool dominates(Individual *);
 

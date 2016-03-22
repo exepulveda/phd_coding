@@ -3,60 +3,57 @@
 
 /* Routine to compute crowding distance based on ojbective function values when the population in in the form of a list */
 
+bool myfunction(pair<double,int> i,pair<double,int> j) { return (i.first<j.first); }
+
+
 void calculateCrowdingDistance(vector<int> front,Population *pop) {
     int size = front.size();
     
-    //initialize all distance to 0
-    vector<double> distances(size,0);
-    
-    vector<double> crowdDistance(size,0);
-    vector< pair<double,int> > objectiveValue(size);
-    double objectiveMax;
-    double objectiveMin;
-    double objectiveRange;
-    
-    int nobj = pop->getPtr(0)->nobj;
+    if (size == 1) {
+        //printf("Frontier size 1: %d\n",front[0]);
+        pop->getPtr(front[0])->crowdDistance = inf;
+    } else if (size == 2) {
+        //printf("Frontier size 2: %d and %d\n",front[0],front[1]);
+        pop->getPtr(front[0])->crowdDistance = inf;
+        pop->getPtr(front[1])->crowdDistance = inf;
+    } else if (size > 2) {
+        double objectiveRange;
+        //initialize all distance to 0
+        for (int i=0;i<size;i++) {
+            pop->getPtr(front[i])->crowdDistance = 0.0;
+        }
 
-    for (int o=0;o<nobj;o++) {
-        //fill objective o-th values
-        if (size >= 2) {
-            objectiveValue[0] = make_pair(pop->getPtr(front[0])->fitness[o],front[0]);
-            objectiveMax = objectiveValue[0].first;
-            objectiveMin = objectiveMax;
-            for (int i=1;i<size;i++) {
+        int nobj = pop->getPtr(0)->nobj;
+
+        for (int o=0;o<nobj;o++) {
+            //fill objective o-th values
+            vector< pair<double,int> > objectiveValue(size);
+            for (int i=0;i<size;i++) {
                 objectiveValue[i] = make_pair(pop->getPtr(front[i])->fitness[o],front[i]);
-                if (objectiveMax < objectiveValue[i].first) {
-                    objectiveMax = objectiveValue[i].first;
-                }
-                if (objectiveMin > objectiveValue[i].first) {
-                    objectiveMin = objectiveValue[i].first;
-                }
             }
-            objectiveRange = objectiveMax - objectiveMin;
         
             //sort
-            sort(objectiveValue.begin(), objectiveValue.end());
-            if (size > 0) {
-                crowdDistance[0] = inf;
-                crowdDistance[size-1] = inf;
-                
-                pop->getPtr(0)->crowdDistance = crowdDistance[0];
-                pop->getPtr(size-1)->crowdDistance = crowdDistance[size-1];
-            }
+            sort(objectiveValue.begin(), objectiveValue.end(),myfunction);
+            objectiveRange = (objectiveValue[size-1].first - objectiveValue[0].first);
+
+            pop->getPtr(objectiveValue[0].second)->crowdDistance = inf;
+            pop->getPtr(objectiveValue[size-1].second)->crowdDistance = inf;
         
             for (int i=1;i<size-1;i++) {
-                crowdDistance[i] += (objectiveValue[i+1].first - objectiveValue[i-1].first)/objectiveRange;
-                pop->getPtr(i)->crowdDistance = crowdDistance[i];
+                if (objectiveRange != 0.0) {
+                    double obj = (objectiveValue[i+1].first - objectiveValue[i-1].first)/objectiveRange;
+                    printf("OBJECTIVE[%d] Ind[%d][%d]. INC=%f. PREV=%f\n",o,i,objectiveValue[i].second,obj,pop->getPtr(objectiveValue[i].second)->crowdDistance);
+                    pop->getPtr(objectiveValue[i].second)->crowdDistance += obj;
+                }
             }
-        } else if (size == 1) {
-            crowdDistance[0] = inf;
-            pop->getPtr(0)->crowdDistance = crowdDistance[0];
-        } else if (size == 2) {
-            crowdDistance[0] = inf;
-            crowdDistance[1] = inf;
-            pop->getPtr(0)->crowdDistance = crowdDistance[0];
-            pop->getPtr(1)->crowdDistance = crowdDistance[1];
+
+            for (int i=0;i<size;i++) {
+                printf("OBJECTIVE[%d] Ind[%d][%d]=%f\n",o,i,front[i],pop->getPtr(front[i])->crowdDistance);
+            }
+
+        }
+        for (int i=0;i<size;i++) {
+            printf("FINALLY Ind[%d][%d]=%f\n",i,front[i],pop->getPtr(front[i])->crowdDistance);
         }
     }
-    
 }

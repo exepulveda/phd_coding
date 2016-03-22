@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <assert.h>
+
 #include "Population.h"
 #include "Random.h"
 #include "Evaluator.h"
@@ -224,7 +226,7 @@ void Population::append(Population *other) {
 }
 
 
-void Population::nsga2(int ngen) {
+vector< vector < int > >  Population::nsga2(int ngen) {
 
     randomize();
             
@@ -235,22 +237,27 @@ void Population::nsga2(int ngen) {
     }
 
     //calculate first rank
-    vector< vector < int > > front;
+    vector< vector < int > > fronts;
 
     printf("first calculateFrontRank...\n");
-    calculateFrontRank(this,front);
+    calculateFrontRank(this,fronts);
     printf("first calculateFrontRank...DONE\n");
 
-    printf("Size of first frontier=%d\n",front[0].size());
-    for (int k : front[0]) {
-        this->getPtr(k)->print();
+    printf("Size of first frontier=%d\n",fronts[0].size());
+    for (int k : fronts[0]) {
+        this->getPtr(k)->print(k);
     }    
 
-    double rnd;
+    Individual* parent1;
+    Individual* parent2;
+    Individual* child1;
+    Individual* child2;
+    
     for (int g=0;g<ngen;g++) {
         printf("processing generation %d/%d\n",g+1,ngen);
         //update offspring
         Population offspring = Population(this);
+        #pragma omp parallel for private(parent1,parent2,child1,child2)
         for (int i=0;i<size();i+=2) {
             //select 2 parents by Tournoument selection
             Individual* parent1 = selectNSGA2();
@@ -259,67 +266,60 @@ void Population::nsga2(int ngen) {
             Individual* child1 = offspring.getPtr(i);
             Individual* child2 = offspring.getPtr(i+1);
             
-            rnd = randomf();
-            if (rnd < crossoverProb_) {
-                //printf("performing crossover: [%f] < [%f]\n",rnd,crossoverProb_);
-                crossover(parent1,parent2,child1, child2);
-                //parent1->print();
-                //parent2->print();
-                //child1->print();
-                //child2->print();
+            //printf("performing crossover: [%f] < [%f]\n",rnd,crossoverProb_);
+            crossover(parent1,parent2,child1, child2);
+            //parent1->print();
+            //parent2->print();
+            //child1->print();
+            //child2->print();
 
-            } else {
-                //printf("no crossover: [%f] < [%f]\n",rnd,crossoverProb_);
-                child1->copy(parent1);
-                child2->copy(parent2);
-            }
-            //printf("(1.1) Best individual at the moment: %f\n",bestIndividual->fitness);
-        }
-        //2.- mutate
-        #pragma omp parallel for
-        for (int i=0;i<size_;i++) {
+            //2.- mutate
             if (randomf() < mutationProb_) {
                 //printf("mutation prob=%f\n",indProb_);
                 //offspring.get(i).print();
-                mutate(offspring.getPtr(i));
+                mutate(child1);
                 //offspring.get(i).print();
             }
-        }
-        //3.- Evaluate
-        //printf("evaluation\n");
-        //printf("(3) Best individual at the moment: %f\n",bestIndividual->fitness);
-        #pragma omp parallel for
-        for (int i=0;i<size_;i++) {
-            //offspring.get(i).fitness = this->evaluator_(offspring.get(i));
-            this->evaluator_(offspring.getPtr(i));
-            //offspring.getRef(i).print();
+            if (randomf() < mutationProb_) {
+                //printf("mutation prob=%f\n",indProb_);
+                //offspring.get(i).print();
+                mutate(child2);
+                //offspring.get(i).print();
+            }
+            //3.- Evaluate
+            this->evaluator_(child1);
+            this->evaluator_(child2);
+
         }
 
         //add original population to offspring
         offspring.append(this);
         
         //calculate rank and crwodistance
-        front.clear();
+        fronts.clear();
         printf("calculateFrontRank...\n");
-        calculateFrontRank(&offspring,front);
+        calculateFrontRank(&offspring,fronts);
         printf("calculateFrontRank...DONE\n");
 
-        //selection
+        fronts = selectFront(fronts,size_);
+
+        //apply new front
         int i = 0;
-        int j = 0;
-        while (i < size_) {
-            vector<int> &f = front[j];
-            for (int k=0;k<f.size() && i < size_;k++) {
-                this->getPtr(i)->copy(offspring.getPtr(k));
-                f[k] = i; //restore to the index on population not offspring
+        for(int f=0;f<fronts.size();f++) {
+            vector<int> &front = fronts[f];
+            for(int j=0;j<front.size();j++) {
+                this->getPtr(i)->copy(offspring.getPtr(front[j]));
+                this->getPtr(i)->rank = f;
+                front[j] = i;
                 i++;
             }
-            j++;
         }
-        
-        printf("Size of first frontier=%d\n",front[0].size());
-        for (int k : front[0]) {
-            this->getPtr(k)->print();
-        }
+
+        //printAllFronts(this,fronts);
+        printFront(this,fronts[0]);
+
+        assert (i == size_);        
     }
+    
+    return fronts;
 }

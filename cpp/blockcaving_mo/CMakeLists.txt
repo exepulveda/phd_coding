@@ -1,5 +1,7 @@
 include_directories("../ga/src")
 
+add_executable(blockcaving_mo max_npv.cpp)
+
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -12,8 +14,12 @@ if(HDF5_FOUND)
     set(_hdf5_libs hdf5 hdf5_cpp)
 endif()
 
+find_package(Boost COMPONENTS program_options REQUIRED)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIR})
+    target_link_libraries(blockcaving_mo ${Boost_LIBRARIES})
+endif()
 
-add_executable(blockcaving_mo max_npv.cpp)
 
 target_link_libraries (blockcaving_mo ga blockcaving ${_hdf5_libs} jsoncpp)
 

@@ -20,7 +20,7 @@ public:
     void evolve();
     void initialize();
     
-    void nsga2(int ngen);
+    vector< vector < int > > nsga2(int ngen);
 
     
     Individual& getRef(int i);

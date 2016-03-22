@@ -44,22 +44,7 @@ public:
         }       
     }
     
-    void print(bool printGene = false) {
-        if (printGene) {
-            for (int i=0;i<size();i++) {
-                printf("%d|",gene[i]);
-            }
-        }
-        printf("fitness|");
-        for (int i=0;i<nobj;i++) {
-            printf("[%d]=%f|",i,fitness[i]);
-        }
-        printf("constrains|");
-        for (int i=0;i<nconst;i++) {
-            printf("[%d]=%f|",i,constrains_[i]);
-        }
-        printf("\n");
-    }
+    void print(int tag=-1,bool printGene = false);
     
 };
 

@@ -33,9 +33,10 @@ double evaluate(Individual *ind) {
     IntArrayIndividual *individual = (IntArrayIndividual *)ind;
     double nsr;
     double deviation;
+    double constrain;
     
     if (bcp.nsim > 0) {
-        bcp.average_npv_tonnage_deviation(individual->gene,nsr,deviation);
+        bcp.average_npv_tonnage_deviation(individual->gene,nsr,deviation,constrain);
     } else {
         imat schedule(bcp.ndp,bcp.nperiods);
         int k=0;
@@ -45,12 +46,12 @@ double evaluate(Individual *ind) {
                 k++;
             }
         }
-        bcp.single_npv_tonnage_deviation(schedule,nsr,deviation);
+        bcp.single_npv_tonnage_deviation(schedule,nsr,constrain);
     }
 
     
     if (deviation < 0) {
-        ind->fitness[0] = deviation;
+        ind->fitness[0] = constrain;
     } else {
         ind->fitness[0] = nsr;
     }
