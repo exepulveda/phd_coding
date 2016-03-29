@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 
 #include "Individual.h"
 #include "Random.h"
@@ -28,6 +29,12 @@ public:
         
     void copy(Individual &other);
     void copy(Individual *other);
+
+    int compare(Individual *a) {
+        IntArrayIndividual *aa = (IntArrayIndividual *)a;
+        return memcmp(this->gene,aa->gene,sizeof(int)*size_);
+    }
+
 
     Individual *clone() {
         IntArrayIndividual *newobj = new IntArrayIndividual(size(),nobj,nconst);

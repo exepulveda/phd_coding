@@ -44,6 +44,7 @@ private:
     void crossover(Individual* parent1,Individual* parent2,Individual* child1, Individual* child2);
     void mutate(Individual* individual);
     void append(Population *other);
+    Population *purgeDuplicated();
     float mutationProb_;
     float crossoverProb_;
     float indProb_;

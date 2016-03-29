@@ -27,6 +27,8 @@ class Individual {
         
         virtual void set(int i, int value) = 0;
         virtual int getInt(int i) = 0;
+
+        virtual int compare(Individual *other) = 0;
         
         virtual void copy(Individual &other);
         virtual void copy(Individual *other);

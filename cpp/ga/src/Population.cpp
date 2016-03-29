@@ -8,6 +8,7 @@
 #include "Mutation.h"
 #include "Selection.h"
 #include "FrontRank.h"
+#include <boost/crc.hpp>
 
 using namespace std;
 
@@ -38,7 +39,7 @@ Population::Population(Population *p):
     }
 }
 
-        
+       
 void Population::initialize() {
     randomize();
             
@@ -295,10 +296,13 @@ vector< vector < int > >  Population::nsga2(int ngen) {
         //add original population to offspring
         offspring.append(this);
         
+        //purge duplicated
+        Population *unique = offspring.purgeDuplicated();
+
         //calculate rank and crwodistance
         fronts.clear();
         printf("calculateFrontRank...\n");
-        calculateFrontRank(&offspring,fronts);
+        calculateFrontRank(unique,fronts);
         printf("calculateFrontRank...DONE\n");
 
         fronts = selectFront(fronts,size_);
@@ -308,12 +312,14 @@ vector< vector < int > >  Population::nsga2(int ngen) {
         for(int f=0;f<fronts.size();f++) {
             vector<int> &front = fronts[f];
             for(int j=0;j<front.size();j++) {
-                this->getPtr(i)->copy(offspring.getPtr(front[j]));
+                this->getPtr(i)->copy(unique->getPtr(front[j]));
                 this->getPtr(i)->rank = f;
                 front[j] = i;
                 i++;
             }
         }
+        
+        delete unique;
 
         //printAllFronts(this,fronts);
         printFront(this,fronts[0]);
@@ -322,4 +328,43 @@ vector< vector < int > >  Population::nsga2(int ngen) {
     }
     
     return fronts;
+}
+
+Population *Population::purgeDuplicated() {
+    //create a set
+    vector<Individual *> uniqueIndividuals;
+    
+    Individual *pi;
+    Individual *pj;
+    for (int i=0;i<size();i++) {
+        pi = this->getPtr(i);
+        bool unique = true;
+        for (int j=i+1;j<size();j++) {
+            pj = this->getPtr(j);
+            if (pi->compare(pj) == 0) {
+                unique = false;
+                break;
+            }
+        }
+        if (unique) {
+            uniqueIndividuals.push_back(pi);
+        }
+    }
+    
+    Population *newpop = new Population(uniqueIndividuals.size(),this->sample_, this->evaluator_);
+
+    if (this->size() != uniqueIndividuals.size()) {
+        printf("original size=%d, nonduplicated size=%d\n",this->size(),uniqueIndividuals.size());
+    }
+
+    for(int i=0;i<uniqueIndividuals.size();i++) {
+        newpop->getPtr(i)->copy(uniqueIndividuals[i]);
+    }
+    //if it is needed, complete size with random idnividuals
+    //for(int i=uniqueIndividuals.size();i<size_;i++) {
+    //    newpop->getPtr(i)->randomize(minvalue_,maxvalue_);
+    //}
+    
+    
+    return newpop;
 }

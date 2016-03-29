@@ -42,18 +42,18 @@ void calculateCrowdingDistance(vector<int> front,Population *pop) {
             for (int i=1;i<size-1;i++) {
                 if (objectiveRange != 0.0) {
                     double obj = (objectiveValue[i+1].first - objectiveValue[i-1].first)/objectiveRange;
-                    printf("OBJECTIVE[%d] Ind[%d][%d]. INC=%f. PREV=%f\n",o,i,objectiveValue[i].second,obj,pop->getPtr(objectiveValue[i].second)->crowdDistance);
+                    //printf("OBJECTIVE[%d] Ind[%d][%d]. INC=%f. PREV=%f\n",o,i,objectiveValue[i].second,obj,pop->getPtr(objectiveValue[i].second)->crowdDistance);
                     pop->getPtr(objectiveValue[i].second)->crowdDistance += obj;
                 }
             }
 
-            for (int i=0;i<size;i++) {
-                printf("OBJECTIVE[%d] Ind[%d][%d]=%f\n",o,i,front[i],pop->getPtr(front[i])->crowdDistance);
-            }
+            //for (int i=0;i<size;i++) {
+            //    printf("OBJECTIVE[%d] Ind[%d][%d]=%f\n",o,i,front[i],pop->getPtr(front[i])->crowdDistance);
+            //}
 
         }
-        for (int i=0;i<size;i++) {
-            printf("FINALLY Ind[%d][%d]=%f\n",i,front[i],pop->getPtr(front[i])->crowdDistance);
-        }
+        //for (int i=0;i<size;i++) {
+        //    printf("FINALLY Ind[%d][%d]=%f\n",i,front[i],pop->getPtr(front[i])->crowdDistance);
+        //}
     }
 }
