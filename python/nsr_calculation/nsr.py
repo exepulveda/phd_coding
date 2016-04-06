@@ -142,7 +142,18 @@ def calculateNSRLane(
     total_payable = payable_metal_cu + payable_metal_au
     #print "totalPayable",totalPayable
 
-    gross_payable_total = total_payable - (smelter_charges + freight_charges)
+    #penalties
+    if penalty_f is not None:
+        penalties_f = np.zeros_like(concentrate_f)
+        '''above 300 ppm penalties of $1.50 per 100 ppm will apply'''
+        indices = np.where(concentrate_f > penalty_above)
+        #print len(indices),concentrate_f.shape,penalty_each,penalty_f,
+        penalties_f[indices] = np.floor(concentrate_f[indices]/penalty_each) * penalty_f
+    else:
+        penalties_f = 0.0
+
+
+    gross_payable_total = total_payable - (smelter_charges + freight_charges + penalties_f)
     
     #nsr per metal
     proportion_payable_cu = payable_metal_cu / total_payable
@@ -153,15 +164,15 @@ def calculateNSRLane(
     gross_payable_au = proportion_payable_au * gross_payable_total
     refining_value_au = refining_cost_au * price_to_ton_au * payable_au
     
-    #penalties
-    if penalty_f is not None:
-        '''above 300 ppm penalties of $1.50 per 100 ppm will apply'''
-        indices = np.where(concentrate_f > penalty_above)[0]
-        penalties_f = np.int(concentrate_f[indices]/penalty_each) * penalty_f
-    else:
-        penalties_f = 0.0
+        
+    #print gross_payable_cu.shape
+    #print refining_value_cu.shape
+    #print penalties_f.shape
+
 
     nsr_concentrate_cu = gross_payable_cu - refining_value_cu - penalties_f
+
+
     nsr_concentrate_au = gross_payable_au - refining_value_au
     
     nsr_ore_cu = nsr_concentrate_cu / concentrate_cu * (recovery_cu / 100.0) * grade_cu

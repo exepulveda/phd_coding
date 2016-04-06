@@ -1,6 +1,6 @@
 {
-    "population": 1000,
-    "generations": 1000,
+    "population": 100,
+    "generations": 100,
     "seed": 1634120,
     "crossover": {
         "probability": 1.0,

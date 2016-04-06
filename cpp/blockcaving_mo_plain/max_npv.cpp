@@ -47,6 +47,31 @@ double evaluateNSRDeviation(T *individual,double *objs, double *consts) {
     consts[0] = constrain;   
 }
 
+template<typename T>
+double evaluateNSRVariance(T *individual,double *objs, double *consts) {
+    double nsr;
+    double var;
+    double constrain;
+    
+    bcp.average_npv_variance(individual,nsr,var,constrain);
+
+    objs[0] = nsr;
+    objs[1] = -var; //minimize
+    consts[0] = constrain;   
+}
+
+template<typename T>
+double evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
+    double nsr;
+    double dev;
+    double constrain;
+    
+    bcp.average_npv_tonnage_deviation(individual,nsr,dev,constrain);
+
+    objs[0] = nsr;
+    objs[1] = -dev; //minimize
+    consts[0] = constrain;   
+}
 
 namespace pt = boost::property_tree;
 
@@ -121,6 +146,11 @@ int main (int argc, char **argv) {
         caseEval = atoi(argv[4]);
     }
 
+    string initialPopulation;
+    if (argc > 5) {
+        initialPopulation = string(argv[5]);
+    }
+
     //delete destination folder
     remove_all(destination); 
     //create an empty destinatino folder
@@ -146,12 +176,33 @@ int main (int argc, char **argv) {
     
     const int ndp = 231;
     const int nperiods = 12;
+    
+    double (*evaluateFunction)(int *gene,double *objs, double *consts) = &evaluateNSRVariance<int>;
+    
+    switch (caseEval) {
+        case 1:
+            evaluateFunction = &evaluateNSRDeviation;
+            break;
+        case 2:
+            evaluateFunction = &evaluateNSRVariance;
+            break;
+    }
 
-    Population<int> population(popsize,ndp*nperiods,2,1,&evaluateNSRDeviation);
+    Population<int> population(popsize,ndp*nperiods,2,1,evaluateFunction);
     
     population.setup(0,200,1.0,mutation,mutationGenePbl);
 
-    vector< vector < int > > front = population.nsga2(generations);
+    if (initialPopulation.length() == 0) {
+        printf("Initial population from random\n");
+        population.randomize();
+    } else {
+        printf("Initial population from external population\n");
+        imat ipop;
+        ipop.load(initialPopulation,csv_ascii);
+        population.initFromPopulation(ipop);
+    }
+
+    vector<vector<int>> front = population.nsga2(generations);
 
     printf("Best individuals:\n");
 

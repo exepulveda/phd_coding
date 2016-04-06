@@ -47,11 +47,11 @@ modelnames = [
     ("cu_rougher_recovery","cu/recovery",23)  ]
     
 clip_values = {
-    "au_recleaner_concentrate":(3.0,600.0),
-    "cu_recleaner_concentrate":(10.0,60.0),
-    "f_recleaner_concentrate":(100.0,3000),
-    "au_rougher_recovery":(40.0,95.0),
-    "cu_rougher_recovery":(50.0,95.0)
+    "au_recleaner_concentrate":(3.0,500.0),
+    "cu_recleaner_concentrate":(11.0,50.0),
+    "f_recleaner_concentrate":(190.0,2800),
+    "au_rougher_recovery":(40.0,98.0),
+    "cu_rougher_recovery":(50.0,98.0)
     }
 
 ds_inputs = h5_grade_simulations["/simulations"]
@@ -62,7 +62,7 @@ ngeomet = 25
 
 print "simulations shape",n,nsim,ngeomet
 
-ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models_5"
+ppr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/ppr_models_7"
 ppr_model = {}
 for modelname,_,_ in modelnames:
     ppr_model[modelname] = []
@@ -81,8 +81,10 @@ fe_inputs = ds_inputs["fe"][:,:]
 mo_inputs = ds_inputs["mo"][:,:]
 f_inputs = ds_inputs["f"][:,:]
 
+geomet_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/geomet_results"
+
 #create and populate geomet models with 50 grades and 50 geomet simulations
-nsr_filename = os.path.join(ds_path,"geomet_D.mat")
+nsr_filename = os.path.join(geomet_path,"geomet_D.mat")
 if True:
     h5nsr = h5py.File(nsr_filename, "a")
     for modelname,ds_name,_ in modelnames:
@@ -95,8 +97,8 @@ h5nsr = h5py.File(nsr_filename, "r+")
 
 batchsize = 56000
 data = np.empty((batchsize,nsim*ngeomet),dtype=np.float32)
-#inputs = np.empty((7,batchsize))
-inputs = np.empty((6,batchsize))
+inputs = np.empty((7,batchsize))
+#inputs = np.empty((6,batchsize))
 
 for modelname,ds_name,_ in modelnames:
     ds = h5nsr[ds_name]
@@ -117,9 +119,8 @@ for modelname,ds_name,_ in modelnames:
             inputs[2,:] = mo_inputs[bs:be,k] / 10000.0
             inputs[3,:] = fe_inputs[bs:be,k]
             inputs[4,:] = s_inputs[bs:be,k]
-            #inputs[5,:] = f_inputs[bs:be,k]
-            #inputs[6,:] = cucn_inputs[bs:be,k] / 10000.0
             inputs[5,:] = cucn_inputs[bs:be,k] / 10000.0
+            inputs[6,:] = f_inputs[bs:be,k]
             
             
             for i in xrange(ngeomet):

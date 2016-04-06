@@ -42,8 +42,7 @@ if __name__ == "__main__":
 
     n = data.shape[0]
 
-    #inputs = [au_ppm,cu_pct,mo_ppm,fe_pct,s_pct,f_ppm,cucn_pct]
-    inputs = [au_ppm,cu_pct,mo_pct,fe_pct,s_pct,cucn_pct]
+    inputs = [au_ppm,cu_pct,mo_pct,fe_pct,s_pct,cucn_pct,f_ppm]
 
     x = np.empty((len(inputs),n))
     for i,inp in enumerate(inputs):
@@ -106,7 +105,7 @@ if __name__ == "__main__":
 
 
 
-    output_filename = os.path.join(home_path,"optimisation/ppr_models_5/summary_selected_ppr_models.csv")
+    output_filename = os.path.join(home_path,"optimisation/ppr_models_7/summary_selected_ppr_models.csv")
     csv_writer = csv.writer(open(output_filename,"w"),delimiter=",")
     for output in model_names:
         mo = model_output[output]
@@ -124,7 +123,7 @@ if __name__ == "__main__":
             row.insert(0,str(i+1))
             csv_writer.writerow(row)
             
-            fn = os.path.join(home_path,"optimisation/ppr_models_5/ppr_model_{name}_{number}.dump")
+            fn = os.path.join(home_path,"optimisation/ppr_models_7/ppr_model_{name}_{number}.dump")
             with open(fn.format(name=output,number=i),"w") as fout:
                 pickle.dump(mo[i][2],fout,-1)
 

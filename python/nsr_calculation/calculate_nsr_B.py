@@ -17,14 +17,15 @@ import h5py
 
 import nsr
 
-ds_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/results"
+nsr_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/nsr_results"
+base_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/results"
 
 reload_density = False
 
 #define or load grid
 blockmodel3D = None
-if os.path.exists(os.path.join(ds_path,"grid3d.dump")):
-    with open(os.path.join(ds_path,"grid3d.dump"),"r") as fin: 
+if os.path.exists(os.path.join(base_path,"grid3d.dump")):
+    with open(os.path.join(base_path,"grid3d.dump"),"r") as fin: 
         try:
             blockmodel3D = pickle.load(fin)
             print "block model definition loaded"
@@ -38,11 +39,11 @@ nsim = 50
 nblocks = nx*ny*nz
 
 #create nsr dataset
-nsr_filename = os.path.join(ds_path,"nsr_B.mat")
+nsr_filename = os.path.join(nsr_path,"nsr_B.mat")
 h5nsr = h5py.File(nsr_filename, "a")
 
-if False:
-    dset_nsr = h5nsr.create_dataset("nsr", (nblocks,n_simulations), dtype='f')
+if True:
+    dset_nsr = h5nsr.create_dataset("nsr", (nblocks,n_simulations), dtype=np.float32)
 else:
     dset_nsr = h5nsr["nsr"]
 
@@ -59,7 +60,7 @@ dset_grades_cu = h5grades["simulations/cu"]
 dset_grades_au = h5grades["simulations/au"]
 
 #geomet datasets
-h5geomet = h5py.File(os.path.join(home,"results","geomet_B.mat"),"r")
+h5geomet = h5py.File(os.path.join(home,"geomet_results","geomet_B.mat"),"r")
 dset_concentrates_cu = h5geomet["cu/concentrated"]
 dset_recovery_cu = h5geomet["cu/recovery"]
 dset_concentrates_au = h5geomet["au/concentrated"]

@@ -4,13 +4,13 @@
 # include <stdlib.h>
 # include <math.h>
 # include <unistd.h>
-#include <armadillo>
 #include <time.h>
 
 #include "BlockCavingProblem.h"
 #include "IntArrayIndividual.h"
 #include "Population.h"
 
+#include <armadillo>
 using namespace arma;
 
 BlockCavingProblem bcp;
@@ -50,7 +50,7 @@ double evaluate(Individual *ind) {
     }
 
     
-    if (deviation < 0) {
+    if (constrain < 0) {
         ind->fitness[0] = constrain;
     } else {
         ind->fitness[0] = nsr;
@@ -160,4 +160,28 @@ int main (int argc, char **argv) {
     
     schedule.save("solution.mat",csv_ascii);
     
+    printf("Saving population...\n");
+    FILE *fd = fopen("population.csv","w");
+    //the best always is copied
+    IntArrayIndividual *ind  = (IntArrayIndividual *)population.getBestPtr();
+    for (int j=0;j<ndp*nperiods;j++) {
+        if (j ==0) {
+            fprintf(fd,"%d",ind->gene[j]);
+        } else {
+            fprintf(fd,",%d",ind->gene[j]);
+        }
+    }
+    fprintf(fd,"\n");
+    
+    for (int i=0;i<popsize;i++) {
+        IntArrayIndividual *ind  = (IntArrayIndividual *)population.getPtr(i);
+        for (int j=0;j<ndp*nperiods;j++) {
+            if (j ==0) {
+                fprintf(fd,"%d",ind->gene[j]);
+            } else {
+                fprintf(fd,",%d",ind->gene[j]);
+            }
+        }
+        fprintf(fd,"\n");
+    }
 }
