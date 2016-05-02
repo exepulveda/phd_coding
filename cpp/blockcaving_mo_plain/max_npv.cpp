@@ -61,6 +61,20 @@ double evaluateNSRVariance(T *individual,double *objs, double *consts) {
 }
 
 template<typename T>
+double evaluateNSRCVaR(T *individual,double *objs, double *consts) {
+    double nsr;
+    double cvar;
+    double constrain;
+    
+    bcp.average_npv_cvar(individual,nsr,cvar,constrain);
+
+    objs[0] = nsr;
+    objs[1] = cvar;
+    consts[0] = constrain;   
+}
+
+
+template<typename T>
 double evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
     double nsr;
     double dev;
@@ -185,6 +199,9 @@ int main (int argc, char **argv) {
             break;
         case 2:
             evaluateFunction = &evaluateNSRVariance;
+            break;
+        case 3:
+            evaluateFunction = &evaluateNSRCVaR;
             break;
     }
 

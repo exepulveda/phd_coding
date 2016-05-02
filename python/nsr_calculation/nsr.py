@@ -34,6 +34,159 @@ def calculate_nsr_cut():
     smelter_charges_ore = smelter_charges / dmt #AM
     refining_charges_ore = refining_charges * payable_ore #AR
 
+def calculateNSRNewcrest(
+    #cu
+    grade_cu,
+    recovery_cu,
+    concentrate_cu,
+    price_cu,
+    price_to_ton_cu,
+    #au
+    grade_au,
+    recovery_au,
+    concentrate_au,
+    price_au,
+    price_to_ton_au,
+    #cost cu
+    deduct_cu,
+    deduct_proportion_cu,
+    refining_cost_cu,
+    treatment_cost_cu,
+    #cost au
+    deduct_au,
+    deduct_proportion_au,
+    refining_cost_au,
+    #penalties realted low copper
+    min_concentrate_cu,
+    penalty_min_concentrate_cu,
+    #penalties related F
+    concentrate_f,
+    penalty_above,
+    penalty_each,
+    penalty_f,
+    #others
+    transportation_costs, # $/t
+    moisture,
+    marine_insurence,
+    milling_costs, # $/t
+    transportation_losses, # %
+    #royalty
+    royalty, #%
+    admi_costs_royalty, # $/t
+    allowable_depreciation_royalty, # $/t
+    
+    verbose = False):
+        
+    #calculate payable or smelter metal content
+    
+    #au_smelter_grade = grade_au*recovery_au * deduct_proportion_au * (1.0 - transportation_losses)
+    #cu_smelter_grade = (grade_cu*recovery_cu * 100.0 * 1000.0) * deduct_proportion_cu * (1.0 - transportation_losses)
+    
+    
+    
+    #payable_cu = (concentrate_cu - deduct_cu) * deduct_proportion_cu
+    #payable_metal_cu = payable_cu * price_cu * price_to_ton_cu / 100.0
+
+    #payable_au = (concentrate_au - deduct_au) * deduct_proportion_au 
+    #payable_metal_au = payable_au * price_au * price_to_ton_au         
+        
+    TON = 342.50
+        
+    #deductions
+    au_fm = grade_au * recovery_au / 100.0 * TON * price_to_ton_au
+    au_sfm = au_fm * deduct_proportion_au * (1.0 - transportation_losses)
+    au_sg = au_sfm / TON / price_to_ton_au
+    au_fg = au_fm / price_to_ton_au / TON
+    au_ded = (au_fg - au_sg) * (price_au * price_to_ton_au)
+    
+    if verbose:
+        print "au_fm",au_fm
+        print "au_sfm",au_sfm
+        print "au_sg",au_sg
+        print "au_fg",au_fg
+        print "au_ded",au_ded
+    
+    
+
+    cu_str = (concentrate_cu - deduct_cu) / concentrate_cu
+    cu_fm = grade_cu * (recovery_cu / 100.0) * TON / 100.0
+    
+    
+    cu_sfm =  cu_fm* cu_str * (1.0-transportation_losses)
+    
+    cu_sg = cu_sfm*1000000/TON
+
+    cu_fg = cu_fm* 1000000/TON
+    cu_ded = (cu_fg - cu_sg) * price_cu / 453.59237
+
+    if verbose:
+        print "cu_str",cu_str
+        print "cu_sfm",cu_sfm
+        print "cu_sg",cu_sg
+        print "cu_fm",cu_fm
+        print "cu_fg",cu_fg
+        print "cu_ded",cu_ded
+
+    
+    #smelter charges
+    #con_dry = ((grade_cu*(recovery_cu/100.0)))/concentrate_cu/100.0
+    con_dry = ((grade_cu*10000 *(recovery_cu/100.0))/10000)/(concentrate_cu)
+    sme_dry = (con_dry-0.0/1000)*(1.0-transportation_losses)  
+    smet_cst = sme_dry * treatment_cost_cu
+
+    if verbose:
+        print "con_dry",con_dry
+        print "sme_dry",sme_dry
+        print "smet_cst",smet_cst
+
+    
+    #fluorine penalties
+    fpt_cst = None
+    
+    #low copper
+    cuc_pen = (0 if concentrate_cu > min_concentrate_cu else penalty_min_concentrate_cu) * sme_dry #penalty is in $/dwt
+    if verbose:
+        print "cuc_pen",cuc_pen
+    
+    #refining charges
+    au_ref =  au_sg * refining_cost_au * price_to_ton_au
+    cu_ref =  cu_sg * refining_cost_cu / 453.59237
+    ref_cst =  au_ref + cu_ref
+    if verbose:
+        print "au_ref",au_ref
+        print "cu_ref",cu_ref
+        print "ref_cst",ref_cst
+    
+    #revenues
+    au_rev = au_fg * price_au * price_to_ton_au 
+    cu_rev = cu_fg * price_cu / 453.59237
+    rev = au_rev + cu_rev
+
+    if verbose:
+        print "au_rev",au_rev
+        print "cu_rev",cu_rev
+        print "rev",rev
+
+    
+    #conc_cst
+    tra_miav = (au_rev + cu_rev) * marine_insurence
+    ttracst = transportation_costs*(con_dry)/(1.0-moisture)
+    conc_cst = tra_miav + ttracst
+    
+    #realisation costs
+    real_cst = conc_cst + ded_cst + smet_cst + fpt_cst + cuc_pen + ref_cst # $/t
+
+    
+    #royalty costs
+    roya_cst = max(0,(rev - milling_costs - real_cst - 1.0/3.0* admi_costs_royalty - allowable_depreciation_royalty) * royalty)
+
+    #underground value
+    underground_value = rev - (real_cst + roya_cst)
+        
+
+    return underground_value
+
+
 def calculateNSR(
         grade_cu,
         grade_au,
@@ -263,29 +416,95 @@ def calculateNSR2(
     return nsrTotal,nsrOre,nsrConcentrate
 
 if __name__ == "__main__":
-    grade_cu = 0.17
-    grade_au = 0.73
-    recovery_cu = 78.0
-    recovery_au = 72.5
-    concentrate_cu = 25.0
-    concentrate_au = 100.0
-    price_cu = 1.7 #US$/lb
-    price_to_ton_cu = 2204.6
-    price_au = 650.0 #US$oz
-    price_to_ton_au = 0.03215
-    deduct_cu =1.0
-    deduct_proportion_cu = 1.0
-    deduct_au = 1.0
-    deduct_proportion_au = 0.99
-    refining_cost_cu = 0.08 #US$/lb
-    refining_cost_au = 6.0 #US$/oz
-    smelter_charges = 80.0
+    grade_cu = 0.12314
+    grade_au = 0.1662
+    recovery_cu = 74.18866
+    recovery_au = 81.45106
+    concentrate_cu = 19.962952
+    concentrate_au = 60.92745
+    concentrate_f = 1450.2705
+    
+    price_cu = 3.38 #$/lb
+    price_to_ton_cu = 2204.6 
+    pon_to_ton = 453.59237
+    price_au = 1562.50 #US$oz
+    price_to_ton_au = 0.0321543408
+    
+    deduct_cu =1.0 #%
+    deduct_proportion_cu = 0.965
+    deduct_au = 1.3 #g/t conc
+    deduct_proportion_au = 0.975
+    
+    treatment_cost_cu = 100.0
+    
+    refining_cost_cu = 0.1 #US$/lb
+    refining_cost_au = 8.75 #US$/oz
+    
     refining_charges = 0.00 #US$/lb
-    freight_charges = 35.0 #US$/ton of con
+    
+    site_costs = 1.6 #$/t
+    
     penalties = 0
     verbose = False
     marketing_charge = 0.0 #%
     treatment_distribution_charge = 0.0
+
+    transportation_costs = 100.388
+    moisture = 0.085
+    marine_insurence = 0.0175 / 100.0
+    milling_costs = 8 # $/t
+    transportation_losses = 0.008
+    #royalty
+    royalty = 0.04
+    admi_costs_royalty = 1.6
+    allowable_depreciation_royalty = 1.09
+
+    min_concentrate_cu = 22.0
+    penalty_min_concentrate_cu = 7.5
+
+    ret = calculateNSRNewcrest(
+        #cu
+        grade_cu,
+        recovery_cu,
+        concentrate_cu,
+        price_cu,
+        price_to_ton_cu,
+        #au
+        grade_au,
+        recovery_au,
+        concentrate_au,
+        price_au,
+        price_to_ton_au,
+        #cost cu
+        deduct_cu,
+        deduct_proportion_cu,
+        refining_cost_cu,
+        treatment_cost_cu,
+        #cost au
+        deduct_au,
+        deduct_proportion_au,
+        refining_cost_au,
+        #penalties realted low copper
+        min_concentrate_cu,
+        penalty_min_concentrate_cu,
+        #penalties related F
+        concentrate_f,
+        [300,700],
+        [100,100],
+        [1.25,1.875],
+        #others
+        transportation_costs, # $/t
+        moisture,
+        marine_insurence,
+        milling_costs, # $/t
+        transportation_losses, # %
+        #royalty
+        royalty, #%
+        admi_costs_royalty, # $/t
+        allowable_depreciation_royalty, # $/t        
+        True)
+
+
 
     ret = calculateNSRLane(
     #cu
@@ -311,6 +530,11 @@ if __name__ == "__main__":
     #common costs
     smelter_charges,
     freight_charges,
+    #penalties related F
+    concentrate_f = concentrate_f,
+    penalty_above = [300,700],
+    penalty_each = 100,
+    penalty_f = [1.25,1.875],
     verbose = False)
 
     print ret
