@@ -108,6 +108,9 @@ int main (int argc, char **argv) {
     // Declare the supported options.
 
     printf("argc=%d\n",argc);
+    for (int i=0;i<argc;i++) {
+        printf("argv[%d]=[%s]\n",i,argv[i]);
+    }
 
 
     if (argc < 3) {
@@ -124,11 +127,6 @@ int main (int argc, char **argv) {
         printf("Config file [%s] does not exist\n",config.c_str());
         return(-4);
     }
-
-    printf("destination=%s\n",argv[2]);
-    
-    destination = string(argv[2]);
-    
 
     int popsize = 100;
     int generations = 50;
@@ -166,14 +164,20 @@ int main (int argc, char **argv) {
     }
 
     //delete destination folder
-    remove_all(destination); 
+    destination = string(argv[2]);
+    printf("destination=%s...\n",argv[2]);
+    //system::error_code ec;
+    //remove_all(destination,ec); 
     //create an empty destinatino folder
-    if (!create_directories(destination)) {
-        printf("The destination folder could not be created\n");
-        return(-2);
-    }
+    //if (!create_directories(destination)) {
+    //    printf("The destination folder could not be created\n");
+    //    return(-2);
+    //}
+    //printf("destination DONE!\n");
 
+    printf("loading BCP problem config...\n");
     bcp.load(config);
+    printf("loading BCP problem config...DONE!\n");
     
     //for (int i=0;i<20;i++) {
         //printf("[%d] density=%f, nsr_average=%f\n",i,bcp.tonnage[i], bcp.nsr_average[i]);

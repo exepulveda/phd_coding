@@ -4,15 +4,25 @@ import os.path
 import matplotlib.pyplot as plt
 import h5py
 
-ds_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/results"
+ds_path = "/home/esepulveda/Documents/projects/newcrest/optimisation/nsr_results"
 
-nsr_filename = os.path.join(ds_path,"nsr_average_inputs.mat")
+nsr_filename = os.path.join(ds_path,"nsr_A.mat")
 h5nsr = h5py.File(nsr_filename, "r")
 
-dset_nsr = h5nsr["average_input/nsr"]
-dset_nsr_average = h5nsr["/average_input/nsr_average"]
+dset_nsr = h5nsr["nsr"]
 
-n,m = dset_nsr.shape
+if len(dset_nsr.shape) == 1:
+    data = dset_nsr[:]
+    print np.min(data)
+    print np.max(data)
+    print np.mean(data)    
+    data = np.clip(data,-100,100)
+    
+    
+    plt.hist(data,11,normed=True)
+    plt.show()
+
+quit()    
 
 for i in xrange(m):
     data = dset_nsr[:,i]

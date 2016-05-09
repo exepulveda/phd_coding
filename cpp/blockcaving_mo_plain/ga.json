@@ -1,5 +1,5 @@
 {
-    "population": 100,
+    "population": 1000,
     "generations": 1000,
     "seed": 1634120,
     "crossover": {

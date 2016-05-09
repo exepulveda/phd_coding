@@ -3,6 +3,10 @@ import numpy as np
 lbToTon = 2204.6
 ounceToTon = 1.0/31.1
 
+price_to_ton_cu = 2204.6 
+price_to_ton_au = 0.0321543408
+
+
 def calc_dmt(
         ore_grade,
         recovery,
@@ -40,13 +44,11 @@ def calculateNSRNewcrest(
     recovery_cu,
     concentrate_cu,
     price_cu,
-    price_to_ton_cu,
     #au
     grade_au,
     recovery_au,
     concentrate_au,
     price_au,
-    price_to_ton_au,
     #cost cu
     deduct_cu,
     deduct_proportion_cu,
@@ -74,7 +76,9 @@ def calculateNSRNewcrest(
     royalty, #%
     admi_costs_royalty, # $/t
     allowable_depreciation_royalty, # $/t
-    
+    #in-mine costs
+    mining_costs,
+    site_costs,
     verbose = False):
         
     #calculate payable or smelter metal content
@@ -106,18 +110,14 @@ def calculateNSRNewcrest(
         print "au_fg",au_fg
         print "au_ded",au_ded
     
-    
-
     cu_str = (concentrate_cu - deduct_cu) / concentrate_cu
     cu_fm = grade_cu * (recovery_cu / 100.0) * TON / 100.0
-    
-    
     cu_sfm =  cu_fm* cu_str * (1.0-transportation_losses)
-    
     cu_sg = cu_sfm*1000000/TON
-
     cu_fg = cu_fm* 1000000/TON
     cu_ded = (cu_fg - cu_sg) * price_cu / 453.59237
+
+    ded_cst = au_ded + cu_ded
 
     if verbose:
         print "cu_str",cu_str
@@ -126,6 +126,7 @@ def calculateNSRNewcrest(
         print "cu_fm",cu_fm
         print "cu_fg",cu_fg
         print "cu_ded",cu_ded
+        print "ded_cst",ded_cst
 
     
     #smelter charges
@@ -141,10 +142,43 @@ def calculateNSRNewcrest(
 
     
     #fluorine penalties
-    fpt_cst = None
+    fpt_cst = np.zeros_like(concentrate_f)
+    remain_concentrate_f = np.array(concentrate_f)
+    
+    sorted_indices = np.flipud(np.argsort(penalty_above)) #decreasing order
+    
+    sorted_penalty_above = np.array(penalty_above)[sorted_indices]
+    sorted_penalty_each = np.array(penalty_each)[sorted_indices]
+    sorted_penalty_f = np.array(penalty_f)[sorted_indices]
+
+    if verbose:
+        print "concentrate_f",concentrate_f
+        print "sorted_penalty_above",sorted_penalty_above
+        print "sorted_penalty_each",sorted_penalty_each
+        print "sorted_penalty_f",sorted_penalty_f
+
+    
+    for i,limit in enumerate(sorted_penalty_above):
+        int_part = np.floor_divide(remain_concentrate_f,limit) > 0
+        penalty = int_part * (remain_concentrate_f - limit) / sorted_penalty_each[i] * sorted_penalty_f[i]
+
+        if verbose:
+            print i,limit,remain_concentrate_f,int_part,penalty,(remain_concentrate_f - limit) / sorted_penalty_each[i]* sorted_penalty_f[i]
+
+        remain_concentrate_f -= int_part * limit
+
+        fpt_cst += penalty
+        
+    fpt_cst *= sme_dry #penalties applied to dry ton
+        
+    if verbose:
+        print "fpt_cst",fpt_cst
+    
     
     #low copper
-    cuc_pen = (0 if concentrate_cu > min_concentrate_cu else penalty_min_concentrate_cu) * sme_dry #penalty is in $/dwt
+    cuc_pen = np.zeros_like(concentrate_cu)
+    indices = np.where(concentrate_cu < min_concentrate_cu)
+    cuc_pen[indices] = penalty_min_concentrate_cu * sme_dry #penalty is in $/dwt
     if verbose:
         print "cuc_pen",cuc_pen
     
@@ -175,17 +209,25 @@ def calculateNSRNewcrest(
     
     #realisation costs
     real_cst = conc_cst + ded_cst + smet_cst + fpt_cst + cuc_pen + ref_cst # $/t
+    if verbose:
+        print "real_cst",real_cst
 
     
     #royalty costs
-    roya_cst = max(0,(rev - milling_costs - real_cst - 1.0/3.0* admi_costs_royalty - allowable_depreciation_royalty) * royalty)
+    roya_cst = (rev - milling_costs - real_cst - 1.0/3.0* admi_costs_royalty - allowable_depreciation_royalty) * royalty
+    #negative to 0
+    roya_cst[roya_cst < 0] = 0.0
+    
+    if verbose:
+        print "roya_cst",roya_cst
 
     #underground value
     underground_value = rev - (real_cst + roya_cst)
         
+    if verbose:
+        print "underground_value",underground_value - (mining_costs + site_costs)
 
-    return underground_value
-
+    return underground_value - (mining_costs + site_costs)
 
 def calculateNSR(
         grade_cu,

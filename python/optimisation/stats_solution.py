@@ -1,7 +1,7 @@
 import sys
 
 sys.path += ["/home/esepulveda/Documents/projects/geostatpy"]
-sys.path += ["../base"]
+sys.path += ["/home/esepulveda/phd_coding/python/base"]
 
 import argparse
 import random
@@ -21,6 +21,11 @@ parser.add_argument('--nsr_ds', required=False,type=str,default="/average_input/
 parser.add_argument('--sim', required=False,type=int,default=-1)
     
 if __name__ == "__main__":
+    example = '''
+        python stats_solution.py --solution_file=.mat --param=pc1s1_A.json --nsr_file= --nsr_ds=nsr 
+    '''
+    
+    
     args = parser.parse_args()
     
     output_path = "./output-optimisation"

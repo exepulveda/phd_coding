@@ -132,7 +132,7 @@ class BlockCavingProblem(object):
             self.nsr = np.array(h5_nsr[root["nsr"]["dataset"]])
             h5_nsr.close()
 
-        self.mining_cost = root["mining_cost"]
+        #self.mining_cost = root["mining_cost"]
 
         element = root["density"]
         with h5py.File(element["datafile"],"r") as df:
@@ -199,7 +199,7 @@ class BlockCavingProblem(object):
 
                     nsr_blocks = self.nsr[:,:,blocks]
                     ton_blocks = self.tonnage[blocks]
-                    npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks) * (self.discount[j] ), axis=(0,2))
+                    npv_sum = np.sum((nsr_blocks * ton_blocks) * (self.discount[j] ), axis=(0,2))
                     
                     #print nsr_blocks.shape
                     #print ton_blokcs.shape
@@ -416,7 +416,7 @@ class BlockCavingProblem(object):
                     '''npv'''
                     nsr_blocks = self.nsr_average[blocks]
                     ton_blocks = self.tonnage[blocks]
-                    npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks) * (self.discount[j] ))
+                    npv_sum = np.sum((nsr_blocks * ton_blocks) * (self.discount[j] ))
                     
                     #print nsr_blocks.shape
                     #print ton_blokcs.shape
@@ -589,7 +589,7 @@ class BlockCavingProblem(object):
         nsr_blocks = self.nsr_average[:]
         ton_blocks = self.tonnage[:]
         #npv_sum = np.sum((nsr_blocks * ton_blocks) * (self.discount[j] / 1000))
-        npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks))
+        npv_sum = np.sum((nsr_blocks * ton_blocks))
         
         return npv_sum
 
@@ -616,7 +616,7 @@ class BlockCavingProblem(object):
                 '''npv'''
                 nsr_blocks = self.nsr_average[blocks]
                 ton_blocks = self.tonnage[blocks]
-                npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks) * (self.discount[j]))
+                npv_sum = np.sum((nsr_blocks* ton_blocks) * (self.discount[j]))
                 
                 #print nsr_blocks.shape
                 #print ton_blokcs.shape
@@ -637,7 +637,7 @@ class BlockCavingProblem(object):
         '''npv'''
         nsr_blocks = self.nsr_average[blocks]
         ton_blocks = self.tonnage[blocks]
-        nsr_sum = np.sum((nsr_blocks - self.mining_cost) * ton_blocks)
+        nsr_sum = np.sum(nsr_blocks * ton_blocks)
         
         #production average over simulations
         prod_mean = np.mean(self.production[:,blocks],axis=0)
@@ -843,7 +843,7 @@ class BlockCavingProblem(object):
 
                     nsr_blocks = nsr[:,blocks]
                     ton_blocks = self.tonnage[blocks]
-                    npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks) * (self.discount[j] ))
+                    npv_sum = np.sum((nsr_blocks * ton_blocks) * (self.discount[j] ))
                     
                     #print nsr_blocks.shape
                     #print ton_blokcs.shape
@@ -913,7 +913,7 @@ class BlockCavingProblem(object):
 
                     nsr_blocks = nsr[blocks]
                     ton_blocks = self.tonnage[blocks]
-                    npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks) * (self.discount[j]))
+                    npv_sum = np.sum((nsr_blocks * ton_blocks) * (self.discount[j]))
                     
                     #print nsr_blocks.shape
                     #print ton_blokcs.shape

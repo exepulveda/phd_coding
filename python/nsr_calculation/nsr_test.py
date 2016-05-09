@@ -11,11 +11,11 @@ if __name__ == "__main__":
     concentrate_au = 60.92745
     concentrate_f = 1450.2705
     
-    price_cu = 3.38 #$/lb
-    price_to_ton_cu = 2204.6 
+    dollar2ausd = 0.8
+    
+    price_cu = 2.29 / dollar2ausd
     pon_to_ton = 453.59237
-    price_au = 1562.50 #US$oz
-    price_to_ton_au = 0.0321543408
+    price_au = 1294.55 / dollar2ausd
     
     deduct_cu =1.0 #%
     deduct_proportion_cu = 0.965
@@ -29,8 +29,6 @@ if __name__ == "__main__":
     
     refining_charges = 0.00 #US$/lb
     
-    site_costs = 1.6 #$/t
-    
     penalties = 0
     verbose = False
     marketing_charge = 0.0 #%
@@ -39,7 +37,7 @@ if __name__ == "__main__":
     transportation_costs = 100.388
     moisture = 0.085
     marine_insurence = 0.0175 / 100.0
-    milling_costs = 8 # $/t
+    milling_costs = 8.0 # $/t
     transportation_losses = 0.008
     #royalty
     royalty = 0.04
@@ -49,19 +47,20 @@ if __name__ == "__main__":
     min_concentrate_cu = 22.0
     penalty_min_concentrate_cu = 7.5
 
+    mining_costs = 5.1
+    site_costs = 13.4
+
     ret = nsr.calculateNSRNewcrest(
         #cu
         grade_cu,
         recovery_cu,
         concentrate_cu,
         price_cu,
-        price_to_ton_cu,
         #au
         grade_au,
         recovery_au,
         concentrate_au,
         price_au,
-        price_to_ton_au,
         #cost cu
         deduct_cu,
         deduct_proportion_cu,
@@ -89,4 +88,8 @@ if __name__ == "__main__":
         royalty, #%
         admi_costs_royalty, # $/t
         allowable_depreciation_royalty, # $/t        
+        mining_costs,
+        site_costs,
         True)
+
+    print ret
