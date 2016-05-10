@@ -242,7 +242,7 @@ void load_hdf5_matrix_double(dmat& x, const string name, const string dsname) {
     dataset.read( (void *) x.memptr(), PredType::NATIVE_DOUBLE, DataSpace::ALL, DataSpace::ALL);
 }
 
-/*
+
 void load_hdf5_double_matrix(mat& x, const std::string name, const std::string dsname)
 {
     // These may be necessary to store the error handler (if we need to).

@@ -2,12 +2,17 @@
 #include <assert.h>
 #include <set>
 
-#include <json/reader.h>
-#include <json/value.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "BlockCavingProblem.h"
 #include "DrawPoint.h"
 #include "hdf5_utils.h"
+
+namespace pt = boost::property_tree;
+
+using namespace boost::property_tree;
+using namespace pt::json_parser;
 
 BlockCavingProblem::BlockCavingProblem()
 {
@@ -49,38 +54,32 @@ void BlockCavingProblem::load(string filename)
 {
     string datafile;
     string dataset;
-    Json::Features features;
-    Json::Reader reader(features);
 
-    std::ifstream config_doc(filename.c_str());
+    ptree pt;
+    json_parser::read_json(filename, pt);
 
 
-    Json::Value root;
-
-    reader.parse(config_doc,root);
-
-    Json::Value node = root["blockModel"];
-
-    int nx = node["nodes"][0].asInt();
-    int ny = node["nodes"][1].asInt();
-    int nz = node["nodes"][2].asInt();
+    int nx = pt.get<int>("blockModel.nodes.x");
+    int ny = pt.get<int>("blockModel.nodes.y");
+    int nz = pt.get<int>("blockModel.nodes.z");
 
     this->bm = BlockModel(nx,ny,nz);
-    
-    float sx = node["sizes"][0].asFloat();
-    float sy = node["sizes"][1].asFloat();
-    float sz = node["sizes"][2].asFloat();
+
+    float sx = pt.get<int>("blockModel.sizes.x");
+    float sy = pt.get<int>("blockModel.sizes.y");
+    float sz = pt.get<int>("blockModel.sizes.z");
 
     this->bm.setVolume(sx,sy,sz);
 
     //periods
-    this->setupPeriods(root["periods"].asInt(),root["discount_rate"].asFloat());
+    //this->setupPeriods(root["periods"].asInt(),root["discount_rate"].asFloat());
+    this->setupPeriods(pt.get<int>("periods"),pt.get<float>("discount_rate"));
 
 
     //drawpoints
-    datafile = root["drawpoints"]["datafile"].asString();
-    dataset = root["drawpoints"]["dataset"].asString();
-    
+    datafile = pt.get<string>("density.datafile"); //root["density"]["datafile"].asString();
+    dataset = pt.get<string>("density.dataset"); // root["density"]["dataset"].asString();
+
     Mat<int> dpinfo;
     printf("loading drawpoints info...\n");
     load_hdf5_matrix< Mat< int > >(dpinfo, datafile, dataset);
@@ -102,8 +101,8 @@ void BlockCavingProblem::load(string filename)
     //dpi.clear();
 
     //load density to calculate tonnage
-    datafile = root["density"]["datafile"].asString();
-    dataset = root["density"]["dataset"].asString();
+    datafile = pt.get<string>("density.datafile"); //root["density"]["datafile"].asString();
+    dataset = pt.get<string>("density.dataset"); // root["density"]["dataset"].asString();
 
     load_hdf5_vector(tonnage, datafile, dataset);
     
@@ -128,8 +127,8 @@ void BlockCavingProblem::load(string filename)
     //load_hdf5_vector(nsr_average, datafile, dataset);
 
     //load nsr
-    datafile = root["nsr"]["datafile"].asString();
-    dataset = root["nsr"]["dataset"].asString();
+    datafile = pt.get<string>("nsr.datafile"); //root["nsr"]["datafile"].asString();
+    dataset = pt.get<string>("nsr.dataset"); //root["nsr"]["dataset"].asString();
 
     irowvec shape = hdf5_shape(datafile, dataset);
     
@@ -195,17 +194,11 @@ void BlockCavingProblem::load(string filename)
 
     //}
 
-    this->treatmentCharge = root["treatmentCharge"].asFloat();
-    //this->nmetals = n;
-    
-    this->confidenceInterval = root["confidenceInterval"].asFloat();
-    
-    this->minTonnage = root["feed_production"]["minimum"].asFloat();
-    this->maxTonnage = root["feed_production"]["maximum"].asFloat();
-    
-    this->targetProduction = root["target_production"].asFloat();
-    
-    this->units = root["units"].asInt();
+    this->confidenceInterval = pt.get<float>("confidenceInterval"); //root["confidenceInterval"].asFloat();
+    this->minTonnage = pt.get<float>("feed_production.minimum"); //root["feed_production"]["minimum"].asFloat();
+    this->maxTonnage = pt.get<float>("feed_production.maximum"); //root["feed_production"]["maximum"].asFloat();
+    this->targetProduction = pt.get<float>("target_production"); //root["target_production"].asFloat();
+    this->units = pt.get<int>("units"); //root["units"].asInt();
 
     
     printf("Loading OK\n");

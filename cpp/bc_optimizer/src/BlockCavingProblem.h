@@ -6,7 +6,6 @@
 
 #include "BlockModel.h"
 #include "DrawPoint.h"
-#include "definitions.h"
 
 using namespace arma;
 

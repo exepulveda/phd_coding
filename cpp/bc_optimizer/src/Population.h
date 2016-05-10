@@ -1,6 +1,7 @@
 #ifndef POPULATION_INCLUDE
 #define POPULATION_INCLUDE
 
+#include <assert.h>
 #include <cstddef>
 #include <vector>
 #include <limits>

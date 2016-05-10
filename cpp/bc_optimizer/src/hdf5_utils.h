@@ -3,8 +3,6 @@
 #include <armadillo>
 
 
-#include "definitions.h"
-
 using namespace std;
 using namespace H5;
 using namespace arma;

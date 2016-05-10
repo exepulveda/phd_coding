@@ -5,7 +5,6 @@
 
 
 #include "BlockModel.h"
-#include "definitions.h"
 
 #include <armadillo>
 
