@@ -1,4 +1,5 @@
-SRCS = Random.cpp Population.cpp Crossover.cpp \
+SRCS = Population.h \
+	Random.cpp Population.cpp Crossover.cpp \
         Individual.cpp IntArrayIndividual.cpp \
         hdf5_utils.cpp \
         BlockModel.cpp DrawPoint.cpp BlockCavingProblem.cpp \

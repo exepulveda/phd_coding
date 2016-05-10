@@ -257,17 +257,27 @@ public:
         }    
     }
 
-    void initFromPopulation(imat &population) {
-        int tocopy = (population.n_rows > npop)?npop:population.n_rows;
+    void initFromPopulation(imat &population,float initialPopulationProportion) {
+        int tocopy = int(population.n_rows *initialPopulationProportion);
+        tocopy = (tocopy > npop)?npop:tocopy;
         printf("population size:%d, external population size:%d, tocopy:%d\n",npop,population.n_rows,tocopy);
+        
         for (int i=0;i<tocopy;i++) {
             for (int j=0;j<ngene;j++) {
                 genes[i][j] = population(i,j);
             }    
         }    
-        
+
         for (int i=tocopy;i<npop;i++) {
             randomizeGene(genes[i],minvalue_,maxvalue_);
+        }    
+
+        printf("minvalue %d, maxvalue %d\n",minvalue_,maxvalue_);
+        for (int i=0;i<npop;i++) {
+            for (int j=0;j<ngene;j++) {
+                assert(genes[i][j] >= minvalue_);
+                assert(genes[i][j] <= maxvalue_);
+            }    
         }    
     }
     

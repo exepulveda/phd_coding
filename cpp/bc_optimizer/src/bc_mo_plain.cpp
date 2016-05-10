@@ -162,6 +162,10 @@ int main (int argc, char **argv) {
     if (argc > 5) {
         initialPopulation = string(argv[5]);
     }
+    float initialPopulationProportion = 0.1; //10%
+    if (argc > 6) {
+        initialPopulationProportion = atof(argv[6]);
+    } 
 
     //delete destination folder
     destination = string(argv[2]);
@@ -188,9 +192,8 @@ int main (int argc, char **argv) {
         //}
     //}
     
-    int numt = omp_get_max_threads();
-    
-    printf("Using %d threads\n",numt);
+    printf("Max threads %d\n",omp_get_max_threads());
+    printf("Using %d threads\n",omp_get_num_procs());
     
     const int ndp = 231;
     const int nperiods = 12;
@@ -220,7 +223,7 @@ int main (int argc, char **argv) {
         printf("Initial population from external population\n");
         imat ipop;
         ipop.load(initialPopulation,csv_ascii);
-        population.initFromPopulation(ipop);
+        population.initFromPopulation(ipop,initialPopulationProportion);
     }
 
     vector<vector<int>> front = population.nsga2(generations);
