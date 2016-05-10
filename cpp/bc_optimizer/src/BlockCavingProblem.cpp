@@ -65,9 +65,9 @@ void BlockCavingProblem::load(string filename)
 
     this->bm = BlockModel(nx,ny,nz);
 
-    float sx = pt.get<int>("blockModel.sizes.x");
-    float sy = pt.get<int>("blockModel.sizes.y");
-    float sz = pt.get<int>("blockModel.sizes.z");
+    float sx = pt.get<float>("blockModel.sizes.x");
+    float sy = pt.get<float>("blockModel.sizes.y");
+    float sz = pt.get<float>("blockModel.sizes.z");
 
     this->bm.setVolume(sx,sy,sz);
 
@@ -77,8 +77,8 @@ void BlockCavingProblem::load(string filename)
 
 
     //drawpoints
-    datafile = pt.get<string>("density.datafile"); //root["density"]["datafile"].asString();
-    dataset = pt.get<string>("density.dataset"); // root["density"]["dataset"].asString();
+    datafile = pt.get<string>("drawpoints.datafile"); //root["density"]["datafile"].asString();
+    dataset = pt.get<string>("drawpoints.dataset"); // root["density"]["dataset"].asString();
 
     Mat<int> dpinfo;
     printf("loading drawpoints info...\n");
