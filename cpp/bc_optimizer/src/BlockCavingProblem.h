@@ -52,6 +52,8 @@ class BlockCavingProblem
         int nmetals;
         int units;
         int nsim;
+        
+        int maxExtraction;
 
         frowvec nsr_average;
         fmat nsr;

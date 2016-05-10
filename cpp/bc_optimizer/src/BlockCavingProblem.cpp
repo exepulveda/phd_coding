@@ -199,7 +199,8 @@ void BlockCavingProblem::load(string filename)
     this->maxTonnage = pt.get<float>("feed_production.maximum"); //root["feed_production"]["maximum"].asFloat();
     this->targetProduction = pt.get<float>("target_production"); //root["target_production"].asFloat();
     this->units = pt.get<int>("units"); //root["units"].asInt();
-
+    this->maxExtraction = pt.get<int>("max_block_extraction"); //root["units"].asInt();
+    
     
     printf("Loading OK\n");
 }
@@ -435,7 +436,7 @@ void BlockCavingProblem::calculateNSRTonnage(int *schedule,rowvec &npvDistributi
             
             nBlocksToExtract = units * schedule[index];
 
-            assert(nBlocksToExtract <= 200);
+            assert(nBlocksToExtract <= maxExtraction);
             assert(nBlocksToExtract >= 0);
 
             dp->extraction(prevExtractions,nBlocksToExtract,blocks);

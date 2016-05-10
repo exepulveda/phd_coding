@@ -195,8 +195,8 @@ int main (int argc, char **argv) {
     printf("Max threads %d\n",omp_get_max_threads());
     printf("Using %d threads\n",omp_get_num_procs());
     
-    const int ndp = 231;
-    const int nperiods = 12;
+    const int ndp = bcp.ndp;
+    const int nperiods = bcp.nperiods;
     
     double (*evaluateFunction)(int *gene,double *objs, double *consts) = &evaluateNSRVariance<int>;
     
@@ -214,7 +214,7 @@ int main (int argc, char **argv) {
 
     Population<int> population(popsize,ndp*nperiods,2,1,evaluateFunction);
     
-    population.setup(0,200,1.0,mutation,mutationGenePbl);
+    population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl);
 
     if (initialPopulation.length() == 0) {
         printf("Initial population from random\n");
