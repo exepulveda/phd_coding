@@ -66,8 +66,8 @@ class BlockCavingProblem(object):
 
         node = root["blockModel"]
 
-        nx,ny,nz = node["nodes"]
-        sx,sy,sz = node["sizes"]
+        nx,ny,nz = node["nodes"]["x"],node["nodes"]["y"],node["nodes"]["z"]
+        sx,sy,sz = node["sizes"]["x"],node["sizes"]["y"],node["sizes"]["z"]
         
         nsim = int(root["nsim"])
         self.nsim = nsim
@@ -78,7 +78,7 @@ class BlockCavingProblem(object):
 
         self.units = root["units"]
         self.max_block_extraction = root["max_block_extraction"]
-        self.production_targets = root["production_targets"]
+        self.production_targets = root["target_production"]
         self.risk_level = root["confidenceInterval"]
 
         self.minimum_feed_production = root["feed_production"]["minimum"]
@@ -578,6 +578,83 @@ class BlockCavingProblem(object):
                     #npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks))
                     
                     npv[j] += npv_sum
+                    
+                    tonnage[j] += np.sum(ton_blocks)
+
+
+        return npv,tonnage
+
+    def calculate_average_npv_tonnage(self,schedule,nsr=None):
+        if nsr is None:
+            nsr_data = self.nsr_average
+        else:
+            nsr_data = nsr
+
+        tonnage = np.zeros(self.nperiods)
+        npv = np.zeros(self.nperiods)
+        
+        n,nsim = nsr.shape
+        
+        for i in xrange(self.ndp):
+            prevExtractions = 0
+
+            dp = self.drawpoints[i]
+            totalTonnage = 0.0
+            for j in xrange(0,self.nperiods):
+                nBlocksToExtract = self.units * schedule[i,j]
+                 
+                blocks = dp.extraction(prevExtractions,nBlocksToExtract)
+                extractedBlocks = len(blocks)
+                prevExtractions += extractedBlocks
+                schedule[i,j] = extractedBlocks
+
+                if (extractedBlocks > 0):
+                    '''npv'''
+                    nsr_blocks = np.mean(nsr_data[blocks],axis=1)
+                    ton_blocks = self.tonnage[blocks] / 1.0e3
+                    npv_sum = np.sum((nsr_blocks * ton_blocks)) * (self.discount[j] / 1000.0)
+                    #npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks))
+                    
+                    npv[j] += npv_sum
+                    
+                    tonnage[j] += np.sum(ton_blocks)
+
+
+        return npv,tonnage
+
+    def calculate_all_npv_tonnage(self,schedule,nsr=None):
+        if nsr is None:
+            nsr_data = self.nsr_average
+        else:
+            nsr_data = nsr
+
+        n,nsim = nsr.shape
+
+        tonnage = np.zeros(self.nperiods)
+        npv = np.zeros((nsim,self.nperiods))
+        
+        
+        for i in xrange(self.ndp):
+            prevExtractions = 0
+
+            dp = self.drawpoints[i]
+            totalTonnage = 0.0
+            for j in xrange(0,self.nperiods):
+                nBlocksToExtract = self.units * schedule[i,j]
+                 
+                blocks = dp.extraction(prevExtractions,nBlocksToExtract)
+                extractedBlocks = len(blocks)
+                prevExtractions += extractedBlocks
+                schedule[i,j] = extractedBlocks
+
+                if (extractedBlocks > 0):
+                    '''npv'''
+                    nsr_blocks = nsr_data[blocks].T
+                    ton_blocks = self.tonnage[blocks] / 1.0e3
+                    npv_sum = np.sum((ton_blocks * nsr_blocks),axis=1) * (self.discount[j] / 1000.0)
+                    #npv_sum = np.sum(((nsr_blocks - self.mining_cost) * ton_blocks))
+                    
+                    npv[:,j] += npv_sum
                     
                     tonnage[j] += np.sum(ton_blocks)
 

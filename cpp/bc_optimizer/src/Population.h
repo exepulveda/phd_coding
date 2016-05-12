@@ -5,7 +5,9 @@
 #include <cstddef>
 #include <vector>
 #include <limits>
+#include <unordered_set>
 #include <armadillo>
+
 using namespace arma;
 
 #include "Random.h"
@@ -31,11 +33,13 @@ public:
         constrains = new double*[npop_];
         rank = new size_t[npop_];
         crowdDistance = new double[npop_];
+        evaluated = new bool[npop_];
 
         for (int i=0;i<npop_;i++) {
             genes[i] = new T[ngene_];
             objectives[i] = new double[nobj_];
             constrains[i] = new double[nconst_];
+            evaluated[i] = false;
         }
     }    
  
@@ -45,24 +49,30 @@ public:
             delete [] objectives[i];
             delete [] constrains[i];
         }
-        delete genes;
-        delete objectives;
-        delete constrains;
+        delete [] genes;
+        delete [] objectives;
+        delete [] constrains;
+        delete [] evaluated;
         
     }   
     
-    void evolve();
     void initialize();
     
     vector<vector<int>> nsga2(int generations) {
                 
         //first evaluation
         printf("evaluating initial individuals...\n");
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i=0;i<npop;i++) {
             this->evaluator(genes[i],objectives[i],constrains[i]);
+            printf("Initial ind[%d]: objectives=%f,%f: constrains=%f\n",i+1,objectives[i][0],objectives[i][1],constrains[i][0]);
         }
         printf("evaluating initial individuals...DONE\n");
+
+        //for (int i=0;i<npop;i++) {
+        //}
+
+        exit(-19);
 
         //calculate first rank
         vector< vector < int > > fronts;
@@ -193,6 +203,168 @@ public:
         
         return fronts;
     }
+    
+    void evolve(int generations, Population<T> &best) {
+        //one generation more
+        //1.- create offspring
+        //printf("creating offspring\n");
+        //printf("(1) Best individual at the moment: %f\n",bestIndividual->fitness);
+        //Population offspring = Population(this);
+        //printf("(1.0) Best individual at the moment: %f\n",bestIndividual->fitness);
+        
+        
+        //first evaluation
+        printf("evaluating initial individuals...%d\n",npop);
+        #pragma omp parallel for
+        for (int i=0;i<npop;i++) {
+            evaluate(i);
+            //printf("evaluating[%d]: objectives=%f, constrains=%f\n",i,objectives[i][0],constrains[i][0]);
+        }
+        printf("evaluating initial individuals...DONE\n");
+        //Best
+        copyTo(0,&best,0);
+        for (int i=1;i<npop;i++) {
+            if (bestTo(i,&best,0)) {
+                copyTo(i,&best,0);
+            }
+        }
+        printf("FIRST BEST: ");
+        best.printAt(0);
+        
+       
+        Population<T> offspring = Population<T>(npop*2,ngene,nobj,nconst,evaluator);
+
+        double rnd;
+        
+        printf("Starting evolution\n");
+        for (int g=0;g<generations;g++) {    
+            //printf("Processing generation [%d]\n",g+1);
+            //printf("Mating at generation [%d]\n",g+1);
+
+            //copy current population half-size
+            #pragma omp parallel for
+            for (int i=0;i<npop;i++) {
+                copyTo(i, &offspring, i);
+            }
+            
+            //mate othe half
+            #pragma omp parallel for
+            for (int i=0;i<npop;i+=2) {
+                //select 2 parents by Tournoument selection
+                int p1 = select();
+                int p2 = select();
+                
+                T* parent1 = genes[p1];
+                T* parent2 = genes[p2];
+
+                //crossover parents
+                T* child1 = offspring.genes[npop+i];
+                T* child2 = offspring.genes[npop+i+1];
+
+                crossover(parent1,parent2,child1, child2);
+                
+                    //parent1->print();
+                    //parent2->print();
+                    //child1->print();
+                    //child2->print();
+                //offspring.evaluator(offspring.genes[npop+i],offspring.objectives[npop+i],offspring.constrains[npop+i]);
+                //offspring.evaluator(offspring.genes[npop+i+1],offspring.objectives[npop+i+1],offspring.constrains[npop+i+1]);
+                //this->printAt(p1,true);
+                //this->printAt(p2,true);
+                //offspring.printAt(npop+i,true);
+                //offspring.printAt(npop+i+1,true);
+                
+                //both need to be evaluated
+                offspring.evaluated[npop+i] = false;
+                offspring.evaluated[npop+i+1] = false;
+            }
+            //printf("Mutating at generation [%d]\n",g+1);
+            //2.- mutate
+            #pragma omp parallel for
+            for (int i=0;i<offspring.size();i++) {
+                if (randomf() < mutationProb_) {
+                    //offspring.get(i).print();
+                    //printf("mutation prob=%f\n",mutationProb_);
+                    //offspring.printAt(i);
+                    mutate(offspring.genes[i]);
+                    //offspring.printAt(i);
+
+                    //mutated needs to be evaluated
+                    offspring.evaluated[i] = false;
+
+                    //offspring.get(i).print();
+                    //printf("mutation prob=%f DONE!\n",indProb_);
+                }
+            }
+            //3.- Evaluate
+            //printf("Evaluating at generation [%d]\n",g+1);
+            //printf("evaluation\n");
+            //printf("(3) Best individual at the moment: %f\n",bestIndividual->fitness);
+            //create array with 
+            #pragma omp parallel for
+            for (int i=0;i<offspring.size();i++) {
+                //offspring.get(i).fitness = this->evaluator_(offspring.get(i));
+                if (!offspring.evaluated[i]) {
+                    offspring.evaluate(i);
+                }
+                //this->evaluator(offspring.genes[i],offspring.objectives[i],offspring.constrains[i]);
+                //printf("evaluating[%d]: objectives=%f, constrains=%f\n",i,offspring.objectives[i][0],offspring.constrains[i][0]);
+                //offspring.getRef(i).print();
+            }
+            //check best from offspring
+            //offspring.copyTo(0,&best,0);
+            for (int i=0;i<offspring.size();i++) {
+                if (offspring.bestTo(i,&best,0)) {
+                    offspring.copyTo(i,&best,0);
+                    printf("NEW BEST: ");
+                    best.printAt(0);
+                }
+            }
+            //copy always the best elitism
+            best.copyTo(0,this,0);
+
+                //replace new generation by selection
+            for (int i=1;i<npop;i++) {
+                //select 2 parents by Tournoument selection
+                int selected = offspring.select();
+                
+                offspring.copyTo(selected,this,i);
+            }
+            
+            //printf("replacing new generation\n");
+            double mean_fit = 0;
+            double min_fit = this->objectives[0][0];
+            double max_fit = min_fit;
+
+            double mean_cons = 0;
+            double min_cons = this->constrains[0][0];
+            double max_cons = min_cons;
+            
+            for (int i=0;i<this->size();i++) {
+                mean_fit += objectives[i][0];
+                if (min_fit > objectives[i][0]) {
+                    min_fit = objectives[i][0];
+                }
+                if (max_fit < objectives[i][0]) {
+                    max_fit = objectives[i][0];
+                }
+
+                mean_cons += constrains[i][0];
+                if (min_cons > constrains[i][0]) {
+                    max_cons = constrains[i][0];
+                }
+                if (min_cons < constrains[i][0]) {
+                    max_cons = constrains[i][0];
+                }
+
+            }
+            mean_fit /= npop;
+            mean_cons /= npop;
+            
+            printf("FITNESS[%d] Min=%f | Mean=%f | Max=%f. CONSTRAIN Min=%f | Mean=%f | Max=%f\n",g,min_fit,mean_fit,max_fit,min_cons,mean_cons,max_cons);
+        }
+    }
+    
 
 
     void setup(int minvalue, int maxvalue,float crossoverProb = 0.8,float mutationProb = 0.2,float indpb = 0.01) {
@@ -211,6 +383,7 @@ public:
 
     size_t *rank;
     double *crowdDistance;
+    bool *evaluated;
 
     
     size_t npop;
@@ -231,15 +404,15 @@ public:
             printIndividual(genes[p],ngene,objectives[p],nobj,constrains[p],nconst,rank[p],crowdDistance[p],p, printGene);
         }
     }    
+
+    void printAt(int index, bool printGene = false) {
+        printIndividual(genes[index],ngene,objectives[index],nobj,constrains[index],nconst,0,0,index,printGene);
+    }
+
     
     static void printIndividual(const T *gene,int ngene,const double *objectives,int nobj,const double *constrains,int nconst,int rank,double crowdDistance, int tag = 0, bool printGene = false) {
         if (tag>=0) {
             printf("%d,",tag);
-        }
-        if (printGene) {
-            for (int i=0;i<ngene;i++) {
-                printf("%d|",gene[i]);
-            }
         }
         for (int i=0;i<nobj;i++) {
             printf("%f,",i,objectives[i]);
@@ -248,6 +421,12 @@ public:
             printf("%f,",i,constrains[i]);
         }
         printf(",%d,%f\n",rank,crowdDistance);
+
+        if (printGene) {
+            for (int i=0;i<ngene;i++) {
+                printf("%d|",gene[i]);
+            }
+        }
     }
     
     void randomize() {
@@ -258,9 +437,10 @@ public:
     }
 
     void initFromPopulation(imat &population,float initialPopulationProportion) {
+        //imat populations has in each row an individual, plain row_order
         int tocopy = int(population.n_rows *initialPopulationProportion);
         tocopy = (tocopy > npop)?npop:tocopy;
-        printf("population size:%d, external population size:%d, tocopy:%d\n",npop,population.n_rows,tocopy);
+        printf("population size:%d, external population size:%d, tocopy:%d, gensize=%d\n",npop,population.n_rows,tocopy,ngene);
         
         for (int i=0;i<tocopy;i++) {
             for (int j=0;j<ngene;j++) {
@@ -307,6 +487,8 @@ private:
     int maxvalue_;
 
     int selectNSGA2();
+    bool bestTo(int sel, Population *pop2, int selected);
+
 
     double (*evaluator)(T *,double *objs, double *consts);
     
@@ -319,6 +501,12 @@ private:
     }    
     
     void copyTo(int i, Population *other, int j);
+    
+    void evaluate(int i) {
+        evaluator(this->genes[i],this->objectives[i],this->constrains[i]);
+        this->evaluated[i] = true;
+    }
+
 };
 
 

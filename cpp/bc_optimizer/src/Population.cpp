@@ -20,87 +20,6 @@ void Population<T>::initialize() {
     }
 }
 
-template <typename T>
-void Population<T>::evolve() {
-    //one generation more
-    //1.- create offspring
-    //printf("creating offspring\n");
-    //printf("(1) Best individual at the moment: %f\n",bestIndividual->fitness);
-    //Population offspring = Population(this);
-    //printf("(1.0) Best individual at the moment: %f\n",bestIndividual->fitness);
-    
-    Population<T> offspring = Population<T>(npop*2,ngene,nobj,nconst,evaluator);
-    
-    double rnd;
-    for (int i=0;i<size();i+=2) {
-        //select 2 parents by Tournoument selection
-        T* parent1 = genes[select()];
-        T* parent2 = genes[select()];
-        //crossover parents
-        T* child1 = offspring.genes[i];
-        T* child2 = offspring.genes[i+1];
-        
-        rnd = randomf();
-        if (rnd < crossoverProb_) {
-            //printf("performing crossover: [%f] < [%f]\n",rnd,crossoverProb_);
-            crossover(parent1,parent2,child1, child2);
-            //parent1->print();
-            //parent2->print();
-            //child1->print();
-            //child2->print();
-
-        } else {
-            //printf("no crossover: [%f] < [%f]\n",rnd,crossoverProb_);
-            memcpy(child1,parent1,sizeof(T)*ngene);
-            memcpy(child2,parent2,sizeof(T)*ngene);
-        }
-        //printf("(1.1) Best individual at the moment: %f\n",bestIndividual->fitness);
-    }
-    //2.- mutate
-    #pragma omp parallel for
-    for (int i=0;i<npop;i++) {
-        if (randomf() < mutationProb_) {
-            //printf("mutation prob=%f\n",indProb_);
-            //offspring.get(i).print();
-            mutate(offspring.genes[i]);
-            //offspring.get(i).print();
-        }
-    }
-    //3.- Evaluate
-    //printf("evaluation\n");
-    //printf("(3) Best individual at the moment: %f\n",bestIndividual->fitness);
-    #pragma omp parallel for
-    for (int i=0;i<npop;i++) {
-        //offspring.get(i).fitness = this->evaluator_(offspring.get(i));
-        this->evaluator(offspring.genes[i],offspring.objectives[i],offspring.constrains[i]);
-        //offspring.getRef(i).print();
-    }
-
-    
-    //replace new generation
-    //printf("replacing new generation\n");
-    double mean_fit = 0;
-    double min_fit = offspring.objectives[0][0];
-    double max_fit = min_fit;
-    
-    for (int i=0;i<npop;i++) {
-        memcpy(genes[i],offspring.genes[i],sizeof(T)*ngene);
-        //if (bestIndividual->fitness[0] < individuals[i]->fitness[0]) {
-        //    setNewBest(individuals[i]);
-        //}
-        mean_fit += objectives[i][0];
-        if (min_fit > objectives[i][0]) {
-            min_fit = objectives[i][0];
-        }
-        if (max_fit < objectives[i][0]) {
-            max_fit = objectives[i][0];
-        }
-    }
-    mean_fit /= npop;
-    
-    printf("FITNESS Min=%f | Mean=%f | Max=%f\n",min_fit,mean_fit,max_fit);
-    
-}
 
 template <typename T>
 int Population<T>::select() {
@@ -164,27 +83,49 @@ int Population<T>::tournamentSelection(int k) {
     //select first
     int sel = randomint(0,npop-1);
     int selected = sel;
-    
-    double max_fitness = objectives[sel][0];
 
-    //printf("Selected: %d:%f\n",0,selected.fitness);
-
+    //printIndividual(genes[selected],ngene,objectives[selected],nobj,constrains[selected],nconst,0,0,selected, false);
     
     for (int i=1;i<k;i++) {
         sel = randomint(0,npop-1);
         
-        //printf("Select: %d:%f\n",i,ind.fitness);
-        if (objectives[sel][0] > max_fitness) {
-            max_fitness = objectives[sel][0];
+        if (this->bestTo(sel,this,selected)) {
             selected = sel;
+            //printIndividual(genes[selected],ngene,objectives[selected],nobj,constrains[selected],nconst,0,0,selected, false);
         }
     }
 
-    //printf("Selected: %f\n",selected.fitness);
+    //printf("tournamentSelection DONE=%d\n",selected);
     
     return selected;
     
 }
+
+template <typename T>
+bool Population<T>::bestTo(int sel, Population *pop2, int selected) {
+    if ((constrains[sel][0] < 0) && (pop2->constrains[selected][0] < 0)) {
+        //both are infeasible, choose the less infeasible
+        if (constrains[sel][0] > pop2->constrains[selected][0]) {
+            return true;
+        } else {
+            return false;
+        }
+    } else if ((constrains[sel][0] < 0) && (pop2->constrains[selected][0] >= 0)) {
+        //sel is infeasible, selected is not
+        return false;
+    } else if ((constrains[sel][0] >= 0) && (pop2->constrains[selected][0] < 0)) {
+        //sel is feasible, selected is not, replace
+        return true;
+    } else  {
+        //both are feasible, choose the best
+        if (objectives[sel][0] > pop2->objectives[selected][0]) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
 
 template <typename T>
 int Population<T>::tournamentSelectionNSGA2(int k) {
@@ -468,4 +409,5 @@ void Population<T>::copyTo(int a, Population *other, int b) {
     
     other->rank[b] = rank[a];
     other->crowdDistance[b] = crowdDistance[a];
+    other->evaluated[b] = evaluated[a];
 }

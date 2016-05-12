@@ -439,7 +439,9 @@ void BlockCavingProblem::calculateNSRTonnage(int *schedule,rowvec &npvDistributi
             assert(nBlocksToExtract <= maxExtraction);
             assert(nBlocksToExtract >= 0);
 
-            dp->extraction(prevExtractions,nBlocksToExtract,blocks);
+            int efectiveExtraction = dp->extraction(prevExtractions,nBlocksToExtract,blocks);
+            
+            schedule[index] = efectiveExtraction; //fix
 
             
             totalTonnageExtraction = 0.0;
@@ -619,15 +621,12 @@ void BlockCavingProblem::npv_tonage(imat &schedule,double *objectives)
     objectives[1] = totalTonnage;
 }
 
-void BlockCavingProblem::single_npv_tonnage_deviation(imat &schedule,double &nrs, double &deviation) {
-    assert(schedule.n_rows == ndp);
-    assert(schedule.n_cols == nperiods);
-
+void BlockCavingProblem::single_npv_tonnage_deviation(int *schedule,double &nrs, double &deviation, int sim) {
     DrawPoint *dp;
 
     int extractedBlocks;
     int nBlocksToExtract;
-    double ton; 
+    double tmp_tonnage,discounted_tonnage; 
     double npv_total,npv;
     unsigned int blockid;
     
@@ -638,6 +637,8 @@ void BlockCavingProblem::single_npv_tonnage_deviation(imat &schedule,double &nrs
         totalTonnage[p] = 0.0;
     }
     
+    
+    npv_total = 0.0;
     for (int i=0;i<ndp;i++) {
         int prevExtractions = 0;
 
@@ -647,9 +648,12 @@ void BlockCavingProblem::single_npv_tonnage_deviation(imat &schedule,double &nrs
 
 
         for (int p=0;p<nperiods;p++) {
+            int index = i*nperiods + p;
 
-            nBlocksToExtract = units * schedule(i,p);
+            nBlocksToExtract = units * schedule[index];
             extractedBlocks = dp->extraction(prevExtractions,nBlocksToExtract,blocks);
+            
+            schedule[index] = extractedBlocks; //fix
 
             //printf("dp[%d] at period[%d],prevExtractions=%d,nBlocksToExtract=%d,extractedBlocks=%d\n",i,p,prevExtractions,nBlocksToExtract,extractedBlocks);
             // cout << "processing period: " << j<< endl;
@@ -657,17 +661,22 @@ void BlockCavingProblem::single_npv_tonnage_deviation(imat &schedule,double &nrs
             for (int b=0;b<extractedBlocks;b++) {
                 blockid = blocks[b];
 
-                //printf("%d,%d,%d,%d\n",i,j,b,blockid);
+                //assert(blockid < bm.n);
+                //assert(blockid >= 0);
 
-                ton = tonnage[blockid] / 1.0e3;
-                //cout << "processing extraction: " << b << endl;
+                tmp_tonnage = this->tonnage[blockid] / 1.0e3;
+                totalTonnage[p] += tmp_tonnage;
+                discounted_tonnage = tmp_tonnage * discount[p] / 1.0e3;
 
-                npv = this->nsr_average[blockid] * ton * discount[p] / 1.0e3;
+                if (sim < 0) {
+                    npv = this->nsr_average[blockid] * discounted_tonnage;
+                } else {
+                    npv = this->nsr(blockid,sim) * discounted_tonnage;
+                }
                 npv_total += npv;
 
-                totalTonnage[p] += ton;
+                //printf("dp[%d] at period[%d],blockid=%d,tonnage=%f,nsr_average=%f\n",i,p,blockid,this->tonnage[blockid],this->nsr_average[blockid]);
 
-                //productionPeriod(j) += ton;
             }
             prevExtractions += extractedBlocks;
         }
@@ -677,6 +686,7 @@ void BlockCavingProblem::single_npv_tonnage_deviation(imat &schedule,double &nrs
     //deviation
     deviation = 0.0;
     for (int p=0;p<nperiods;p++) {
+        //printf("deviation:: minTonnage=%f, maxTonnage=%f, totalTonnage[%d] =%f\n",minTonnage,maxTonnage,p+1,totalTonnage[p]);
         if (totalTonnage[p] < this->minTonnage) {
             deviation += (totalTonnage[p] - this->minTonnage);
         } else if (totalTonnage[p] > this->maxTonnage) {

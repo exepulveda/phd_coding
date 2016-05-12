@@ -1,9 +1,8 @@
 SRCS = Population.h \
-	Random.cpp Population.cpp Crossover.cpp \
+		Random.cpp Population.cpp Crossover.cpp \
         Individual.cpp IntArrayIndividual.cpp \
         hdf5_utils.cpp \
-        BlockModel.cpp DrawPoint.cpp BlockCavingProblem.cpp \
-        bc_mo_plain.cpp
+        BlockModel.cpp DrawPoint.cpp BlockCavingProblem.cpp 
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -21,11 +20,22 @@ DEBUG = -g
 CFLAGS = -Wall -c $(DEBUG) -std=c++11 -fopenmp 
 LFLAGS = -Wall $(DEBUG) -std=c++11 -fopenmp $(LIBRARIES) -lz -lm -larmadillo -fopenmp -lboost_system -lboost_filesystem 
 
-bc_mo_plain : $(OBJS)
-	$(H5CC) $(LFLAGS) $(OBJS) -o bc_mo_plain 
+all: bc_mo_plain bc_so_plain
 
-.cpp.o:
+bc_mo_plain : $(OBJS) bc_mo_plain.o
+	$(H5CC) $(LFLAGS) bc_mo_plain.o $(OBJS) -o bc_mo_plain 
+
+bc_so_plain : $(OBJS) bc_so_plain.o
+	$(H5CC) $(LFLAGS) bc_so_plain.o $(OBJS) -o bc_so_plain 
+
+bc_mo_plain.o: bc_mo_plain.cpp $(SRCS)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+
+bc_so_plain.o: bc_so_plain.cpp $(SRCS)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+
+.cpp.o: $(SRCS)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	\rm *.o bc_mo_plain
+	\rm *.o bc_mo_plain bc_so_plain

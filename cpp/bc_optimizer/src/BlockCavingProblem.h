@@ -27,7 +27,7 @@ class BlockCavingProblem
         void npv_cvar_npv(int *schedule,double *objectives,double *constrains);
         
         //single objective
-        void single_npv_tonnage_deviation(imat &schedule,double &nsr, double &deviation);
+        void single_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation,int sim = -1);
         void average_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain);
         //multiobjective
         
