@@ -23,12 +23,12 @@ void Population<T>::initialize() {
 
 template <typename T>
 int Population<T>::select() {
-    return tournamentSelection(5);
+    return tournamentSelection(tournamentSize_);
 }
 
 template <typename T>
 int Population<T>::selectNSGA2() {
-    return tournamentSelectionNSGA2(5);
+    return tournamentSelectionNSGA2(tournamentSize_);
 }
 
 
@@ -39,7 +39,7 @@ void Population<T>::crossover(const T *parent1,const T *parent2,T *child1,T *chi
 
 template <typename T>
 void Population<T>::mutate(T *individual) {
-    SBXMutation(individual,ngene,indProb_,10,minvalue_,maxvalue_);
+    SBXMutation(individual,ngene,indProb_,meta_,minvalue_,maxvalue_);
 }
 
 template <typename T>
@@ -344,12 +344,13 @@ void Population<T>::SBXMutation(T *individual, int ngene, float indpb,float eta_
 
             newy = y + delta*range;
             //printf("mutate %d delta=%f --> %f. min=%d, max=%d, rnd=%f\n",j,deltaq,y + deltaq*range,yl,yu,rnd);
+            printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
             if (newy<minvalue)
                 newy = minvalue;
             if (newy>maxvalue)
                 newy = maxvalue;
 
-            //printf("mutate %d %d -> %d\n",j,y,newy);
+            printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
 
             individual[j] = newy;
         }

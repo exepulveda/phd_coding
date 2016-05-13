@@ -134,6 +134,8 @@ int main (int argc, char **argv) {
     float crossover = 1.0;
     float mutation = 0.2;
     float mutationGenePbl = 0.05;
+    float mutationEta = 15;
+    int tournamentSize = 5;
 
     if (argc > 3) {
         gaConfig = string(argv[3]);
@@ -148,6 +150,8 @@ int main (int argc, char **argv) {
             crossover = pt.get<float>("crossover.probability");
             mutation = pt.get<float>("mutation.probability");
             mutationGenePbl = pt.get<float>("mutation.geneProbability");
+            mutationEta = pt.get<float>("mutation.sbx_type.eta");
+            tournamentSize = pt.get<int>("tournament_size");
         } else {
             printf("GA config file does not exist\n");
             return(-3);
@@ -198,7 +202,7 @@ int main (int argc, char **argv) {
 
     Population<int> population(popsize,ndp*nperiods,1,1,evaluateFunction);
     
-    population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl);
+    population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl,mutationEta,tournamentSize);
 
     printf("Initial population from random\n");
     population.randomize();

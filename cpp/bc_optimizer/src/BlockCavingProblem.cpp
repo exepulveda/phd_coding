@@ -225,8 +225,7 @@ void BlockCavingProblem::setupDrawPoints(int ndp, Mat<int> & x)
         
         //printf("DP[%d], influence size=%d\n",i,dp->size());
     }
-    
-    
+    //printf("Max DP size=[%d]\n",maxsize);
 }
 
 DrawPoint *BlockCavingProblem::getDrawPoint(int index)
