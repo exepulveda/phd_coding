@@ -344,13 +344,13 @@ void Population<T>::SBXMutation(T *individual, int ngene, float indpb,float eta_
 
             newy = y + delta*range;
             //printf("mutate %d delta=%f --> %f. min=%d, max=%d, rnd=%f\n",j,deltaq,y + deltaq*range,yl,yu,rnd);
-            printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
+            //printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
             if (newy<minvalue)
                 newy = minvalue;
             if (newy>maxvalue)
                 newy = maxvalue;
 
-            printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
+            //printf("mutate[%d] %d -> %d. Min:Max=%d:%d\n",j,y,newy,minvalue,maxvalue);
 
             individual[j] = newy;
         }
