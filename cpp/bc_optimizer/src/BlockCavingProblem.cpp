@@ -698,6 +698,28 @@ void BlockCavingProblem::single_npv_tonnage_deviation(int *schedule,double &nrs,
 
 }
 
+void BlockCavingProblem::average_npv_tonnage(int *schedule,double &nsr, double &constrain) {
+    rowvec totalTonnage(this->nperiods);
+    rowvec nsrSim(this->nsim);
+    
+    totalTonnage.fill(0.0);
+    nsrSim.fill(0.0);
+    
+    calculateNSRTonnage(schedule,nsrSim,totalTonnage);
+    
+    nsr = mean(nsrSim);
+    //deviation from production boundaries and target
+    constrain = 0.0;
+    for (int p=0;p<nperiods;p++) {
+        if (totalTonnage[p] < this->minTonnage) {
+            constrain += (totalTonnage[p] - this->minTonnage);
+        } else if (totalTonnage[p] > this->maxTonnage) {
+            constrain += (this->maxTonnage - totalTonnage[p]);
+        }
+    }
+}
+
+
 void BlockCavingProblem::average_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);

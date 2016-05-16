@@ -17,8 +17,8 @@ LIBRARIES = -L$(ARMADILLO_HOME)/lib  -L$(HDF5_HOME)/lib -L$(BOOST_HOME)/lib
 CC = g++
 H5CC = h5c++
 DEBUG = -g
-CFLAGS = -Wall -c $(DEBUG) -std=c++11 -fopenmp 
-LFLAGS = -Wall $(DEBUG) -std=c++11 -fopenmp $(LIBRARIES) -lz -lm -larmadillo -fopenmp -lboost_system -lboost_filesystem 
+CFLAGS = -Wall -c $(DEBUG) -std=c++11 -fopenmp -O3
+LFLAGS = -Wall $(DEBUG) -std=c++11 -fopenmp $(LIBRARIES) -lz -lm -larmadillo -fopenmp -lboost_system -lboost_filesystem -O3
 
 all: bc_mo_plain bc_so_plain
 

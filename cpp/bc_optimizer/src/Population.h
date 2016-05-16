@@ -215,7 +215,7 @@ public:
         
         //first evaluation
         printf("evaluating initial individuals...%d\n",npop);
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int i=0;i<npop;i++) {
             evaluate(i);
             //printf("evaluating[%d]: objectives=%f, constrains=%f\n",i,objectives[i][0],constrains[i][0]);
