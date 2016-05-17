@@ -7,8 +7,6 @@
 #include <limits>
 #include <unordered_set>
 
-#define ARMA_NO_DEBUG
-
 #include <armadillo>
 
 #include <stdio.h>

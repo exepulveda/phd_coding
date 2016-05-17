@@ -206,7 +206,7 @@ void load_hdf5_matrix(fmat& x, const string name, const string dsname) {
     //inplace_trans(x, "lowmem");
     inplace_trans(x);
 
-    cout << "loading DONE" << endl;
+    //cout << "loading DONE" << endl;
     
     dataset.close();
     file.close();
