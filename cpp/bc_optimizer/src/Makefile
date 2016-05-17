@@ -1,5 +1,5 @@
-SRCS = Population.h \
-		Random.cpp Population.cpp Crossover.cpp \
+SRCS = Population.hpp \
+		Random.cpp Crossover.cpp \
         Individual.cpp IntArrayIndividual.cpp \
         hdf5_utils.cpp \
         BlockModel.cpp DrawPoint.cpp BlockCavingProblem.cpp 
@@ -16,9 +16,9 @@ LIBRARIES = -L$(ARMADILLO_HOME)/lib  -L$(HDF5_HOME)/lib -L$(BOOST_HOME)/lib
 
 CC = g++
 H5CC = h5c++
-DEBUG = -g
-CFLAGS = -Wall -c $(DEBUG) -std=c++11 -fopenmp -O3
-LFLAGS = -Wall $(DEBUG) -std=c++11 -fopenmp $(LIBRARIES) -lz -lm -larmadillo -fopenmp -lboost_system -lboost_filesystem -O3
+#DEBUG = -g
+CFLAGS = -Wall -c $(DEBUG) -std=c++11 -fopenmp -O3 -DARMA_NO_DEBUG
+LFLAGS = -Wall $(DEBUG) -std=c++11 -fopenmp $(LIBRARIES) -lz -lm -larmadillo -fopenmp -lboost_system -lboost_filesystem -O3 -DARMA_NO_DEBUG
 
 all: bc_mo_plain bc_so_plain
 

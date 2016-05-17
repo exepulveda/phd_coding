@@ -447,8 +447,8 @@ void BlockCavingProblem::calculateNSRTonnage(int *schedule,rowvec &npvDistributi
             for (int blockid : blocks) {
                 //printf("dp[%d] at period[%d],prevExtractions=%d,nBlocksToExtract=%d,extractedBlocks=%d,blockid=%d\n",i,p,prevExtractions,nBlocksToExtract,blocks.size(),blockid);
                 
-                assert(blockid < bm.n);
-                assert(blockid >= 0);
+                //assert(blockid < bm.n);
+                //assert(blockid >= 0);
 
                 tmp_tonnage = this->tonnage[blockid] / 1.0e3;
                 totalTonnageExtraction += tmp_tonnage;

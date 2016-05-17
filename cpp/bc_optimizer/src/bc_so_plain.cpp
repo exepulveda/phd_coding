@@ -13,7 +13,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "BlockCavingProblem.h"
-#include "Population.h"
+#include "Population.hpp"
 
 using namespace arma;
 using namespace std;
@@ -34,7 +34,7 @@ void individual2mat(T *individual, imat &schedule) {
 }
 
 template<typename T>
-double evaluateNSR(T *individual,double *objs, double *consts) {
+void evaluateNSR(T *individual,double *objs, double *consts) {
     double nsr;
     double constrain;
     
@@ -49,46 +49,6 @@ double evaluateNSR(T *individual,double *objs, double *consts) {
     objs[0] = nsr; 
     consts[0] = constrain;
 
-}
-
-template<typename T>
-double evaluateNSRVariance(T *individual,double *objs, double *consts) {
-    double nsr;
-    double var;
-    double constrain;
-    
-    bcp.average_npv_variance(individual,nsr,var,constrain);
-
-    objs[0] = nsr;
-    objs[1] = -var; //minimize
-    consts[0] = constrain;   
-}
-
-template<typename T>
-double evaluateNSRCVaR(T *individual,double *objs, double *consts) {
-    double nsr;
-    double cvar;
-    double constrain;
-    
-    bcp.average_npv_cvar(individual,nsr,cvar,constrain);
-
-    objs[0] = nsr;
-    objs[1] = cvar;
-    consts[0] = constrain;   
-}
-
-
-template<typename T>
-double evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
-    double nsr;
-    double dev;
-    double constrain;
-    
-    bcp.average_npv_tonnage_deviation(individual,nsr,dev,constrain);
-
-    objs[0] = nsr;
-    objs[1] = -dev; //minimize
-    consts[0] = constrain;   
 }
 
 namespace pt = boost::property_tree;
@@ -187,7 +147,7 @@ int main (int argc, char **argv) {
     const int ndp = bcp.ndp;
     const int nperiods = bcp.nperiods;
     
-    double (*evaluateFunction)(int *gene,double *objs, double *consts);
+    void (*evaluateFunction)(int *gene,double *objs, double *consts);
     
     switch (caseEval) {
         case 1:
@@ -215,7 +175,11 @@ int main (int argc, char **argv) {
     Population<int> bestIndividual(1,ndp*nperiods,1,1,evaluateFunction);
 
     //evolution
+    fflush(stdout);
+    
     population.evolve(generations,bestIndividual);
+    
+    fflush(stdout);    
     
     printf("Best individual:\n");
     imat schedule(ndp,nperiods);    

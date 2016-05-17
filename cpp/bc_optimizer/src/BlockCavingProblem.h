@@ -1,6 +1,8 @@
 #ifndef BLOCKCAVINGPROBLEM_H
 #define BLOCKCAVINGPROBLEM_H
 
+#define ARMA_NO_DEBUG
+
 #include <string>
 #include <armadillo>
 

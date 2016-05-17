@@ -15,7 +15,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "BlockCavingProblem.h"
-#include "Population.h"
+#include "Population.hpp"
 
 using namespace arma;
 using namespace std;
@@ -35,7 +35,7 @@ void individual2mat(T *individual, imat &schedule) {
 }
 
 template<typename T>
-double evaluateNSRDeviation(T *individual,double *objs, double *consts) {
+void evaluateNSRDeviation(T *individual,double *objs, double *consts) {
     double nsr;
     double dev;
     double constrain;
@@ -48,7 +48,7 @@ double evaluateNSRDeviation(T *individual,double *objs, double *consts) {
 }
 
 template<typename T>
-double evaluateNSRVariance(T *individual,double *objs, double *consts) {
+void evaluateNSRVariance(T *individual,double *objs, double *consts) {
     double nsr;
     double var;
     double constrain;
@@ -61,7 +61,7 @@ double evaluateNSRVariance(T *individual,double *objs, double *consts) {
 }
 
 template<typename T>
-double evaluateNSRCVaR(T *individual,double *objs, double *consts) {
+void evaluateNSRCVaR(T *individual,double *objs, double *consts) {
     double nsr;
     double cvar;
     double constrain;
@@ -75,7 +75,7 @@ double evaluateNSRCVaR(T *individual,double *objs, double *consts) {
 
 
 template<typename T>
-double evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
+void evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
     double nsr;
     double dev;
     double constrain;
@@ -134,7 +134,9 @@ int main (int argc, char **argv) {
     float crossover = 1.0;
     float mutation = 0.2;
     float mutationGenePbl = 0.05;
-
+    float mutationEta = 15;
+    int tournamentSize = 5;
+    
     if (argc > 3) {
         gaConfig = string(argv[3]);
         printf("Using gaConfig=%s\n",gaConfig.c_str());
@@ -148,6 +150,8 @@ int main (int argc, char **argv) {
             crossover = pt.get<float>("crossover.probability");
             mutation = pt.get<float>("mutation.probability");
             mutationGenePbl = pt.get<float>("mutation.geneProbability");
+            mutationEta = pt.get<float>("mutation.sbx_type.eta");
+            tournamentSize = pt.get<int>("tournament_size");
         } else {
             printf("GA config file does not exist\n");
             return(-3);
@@ -198,7 +202,7 @@ int main (int argc, char **argv) {
     const int ndp = bcp.ndp;
     const int nperiods = bcp.nperiods;
     
-    double (*evaluateFunction)(int *gene,double *objs, double *consts) = &evaluateNSRVariance<int>;
+    void (*evaluateFunction)(int *gene,double *objs, double *consts) = &evaluateNSRVariance<int>;
     
     switch (caseEval) {
         case 1:
@@ -214,7 +218,7 @@ int main (int argc, char **argv) {
 
     Population<int> population(popsize,ndp*nperiods,2,1,evaluateFunction);
     
-    population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl);
+    population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl,mutationEta,tournamentSize);
 
     if (initialPopulation.length() == 0) {
         printf("Initial population from random\n");

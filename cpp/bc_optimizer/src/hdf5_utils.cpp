@@ -207,6 +207,9 @@ void load_hdf5_matrix(fmat& x, const string name, const string dsname) {
     inplace_trans(x);
 
     cout << "loading DONE" << endl;
+    
+    dataset.close();
+    file.close();
 }
 /**
 void load_hdf5_matrix_double(dmat& x, const string name, const string dsname) {

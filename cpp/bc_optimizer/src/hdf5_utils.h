@@ -1,5 +1,8 @@
 #include <H5Cpp.h>
 #include <cstring>
+
+#define ARMA_NO_DEBUG
+
 #include <armadillo>
 
 
