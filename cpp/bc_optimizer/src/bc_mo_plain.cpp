@@ -23,18 +23,6 @@ using namespace std;
 BlockCavingProblem bcp;
 
 template<typename T>
-void individual2mat(T *individual, imat &schedule) {
-    //row order
-    int k=0;
-    for (int i=0;i<bcp.ndp;i++) {
-        for (int j=0;j<bcp.nperiods;j++) {
-            schedule(i,j) = individual[k];
-            k++;
-        }
-    }
-}
-
-template<typename T>
 void evaluateNSRDeviation(T *individual,double *objs, double *consts) {
     double nsr;
     double dev;
@@ -243,7 +231,7 @@ int main (int argc, char **argv) {
         boost::filesystem::path pout(destination);
         pout /= filename;
         
-        individual2mat(population.genes[i],schedule);
+        bcp.individual2mat(population.genes[i],schedule);
         
         schedule.save(pout.string(),csv_ascii);
         

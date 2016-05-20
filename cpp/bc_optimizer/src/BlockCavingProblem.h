@@ -64,6 +64,21 @@ class BlockCavingProblem
         fmat fluorine_concentrate;
         
         int nblocks;
+        
+        void individual2mat(int *individual, imat &schedule) {
+            //row order
+            if ((schedule.n_rows != ndp) || (nperiods != schedule.n_cols)) {
+                schedule.reshape(ndp,nperiods);
+            }
+            int k=0;
+            for (int i=0;i<ndp;i++) {
+                for (int j=0;j<nperiods;j++) {
+                    schedule(i,j) = individual[k];
+                    k++;
+                }
+            }
+        }
+        
 
     protected:
     private:

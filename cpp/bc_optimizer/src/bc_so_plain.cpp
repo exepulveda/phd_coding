@@ -184,7 +184,7 @@ int main (int argc, char **argv) {
     printf("Best individual:\n");
     imat schedule(ndp,nperiods);    
     
-    individual2mat(bestIndividual.genes[0],schedule);
+    bcp.individual2mat(bestIndividual.genes[0],schedule);
     
     
     sprintf(filename,"%s-solution.mat",destination.c_str());

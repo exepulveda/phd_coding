@@ -227,6 +227,7 @@ class BlockCavingProblem(object):
                 nBlocksToExtract = self.units * schedule[i,j]
                 blocks = dp.extraction(prevExtractions,nBlocksToExtract)
                 extractedBlocks = len(blocks)
+                schedule[i,j] = extractedBlocks
                 prevExtractions += extractedBlocks
                 
                 n +=  extractedBlocks

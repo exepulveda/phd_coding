@@ -320,7 +320,7 @@ public:
                 if (offspring.bestTo(i,&best,0)) {
                     offspring.copyTo(i,&best,0);
                     printf("NEW BEST[gen:%d]: ",g+1);
-                    best.printAt(0,false);
+                    best.printAt(0,stdout,false);
                 }
             }
             //copy always the best --> elitism
@@ -397,48 +397,43 @@ public:
     size_t nobj;
     size_t nconst;
 
-    void printAllFronts(vector<vector<int>> &front) {
+    void printAllFronts(vector<vector<int>> &front,FILE *fd = stdout) {
         int i=0;
         for (vector<int> &f : front) {
-            printf("Front[%d], size=%d. Elements:\n",i,f.size());
-            printFront(f,i,false);
+            fprintf(fd,"Front[%d], size=%d. Elements:\n",i,f.size());
+            printFront(f,fd,false);
             i++;
         }
     }
-    void printFront(vector<int> &f,int tag = 0, bool printGene = false) {
+    void printFront(vector<int> &f, FILE *fd = stdout, bool printGene = false) {
         for (int p : f) {
-            printIndividual(genes[p],ngene,objectives[p],nobj,constrains[p],nconst,rank[p],crowdDistance[p],p, printGene);
+            printAt(p,fd,printGene);
         }
     }    
 
-    void printAt(int index, bool printGene = false) {
-        printIndividual(genes[index],ngene,objectives[index],nobj,constrains[index],nconst,0,0,index,printGene);
-    }
+    void printAt(int index, FILE *fd = stdout, bool printGene = false) {
 
-    
-    void printIndividual(const T *gene,int ngene,const double *objectives,int nobj,const double *constrains,int nconst,int rank,double crowdDistance, int tag = 0, bool printGene = false) {
-        if (tag>=0) {
-            printf("%d,",tag);
-        }
+        fprintf(fd,"%d,",index);
+        fprintf(fd,"%zu,",nobj);
         for (int i=0;i<nobj;i++) {
-            printf("%f,",i,objectives[i]);
+            fprintf(fd,"%f,",i,objectives[index][i]);
         }
+        fprintf(fd,"%u,",nconst);
         for (int i=0;i<nconst;i++) {
-            printf("%f,",i,constrains[i]);
+            fprintf(fd,"%f,",i,constrains[index][i]);
         }
-        printf(",%d,%f",rank,crowdDistance);
+        fprintf(fd,",%d,%f",rank[index],crowdDistance[index]);
 
         if (printGene) {
-            int acc = 0;
-            printf("|GENE|");
+            fprintf(fd,",");
             for (int i=0;i<ngene;i++) {
-                printf("%d|",gene[i]);
-                acc += gene[i];
+                fprintf(fd,"%d|",genes[index][i]);
             }
-            printf("|mean gene=[%d]",acc/ngene);
         }
         
-        printf("\n");
+        fprintf(fd,"\n");
+        
+        fflush(fd);
     }
     
     void randomize() {
@@ -898,6 +893,56 @@ private:
         other->crowdDistance[b] = crowdDistance[a];
         other->evaluated[b] = evaluated[a];
     }
+
+    void save_generation_state(int generation,string destination,bool savePopulation) {
+        char filename[1000];
+
+        sprintf(filename,"%s/solution-at-%d.mat",destination.c_str(),generation);
+        FILE *fd = fopen(filename,"w");
+
+        printAt(0,fd,true);
+        
+        if (savePopulation) {
+            sprintf(filename,"%s/popultation-at-%d.csv",destination.c_str(),generation);
+            //the best always is copied
+            for (int j=0;j<ngene;j++) {
+                if (j ==0) {
+                    fprintf(fd,"%d",genes[0][j]);
+                } else {
+                    fprintf(fd,",%d",genes[0][j]);
+                }
+            }
+            fprintf(fd,"\n");
+            
+            for (int i=0;i<size();i++) {
+                for (int j=0;j<ngene;j++) {
+                    if (j ==0) {
+                        fprintf(fd,"%d",genes[i][j]);
+                    } else {
+                        fprintf(fd,",%d",genes[i][j]);
+                    }
+                }
+                fprintf(fd,"\n");
+            }
+        
+            fclose(fd);
+        }
+    }        
+
+    void save_generation_state_mo(int generation, vector<vector<int>> &front, string destination,bool saveAllFronts,bool printGene) {
+        char filename[1000];
+
+        //print all frontiers
+        for (int i=0;i<front.size();i++) {
+            sprintf(filename,"%s/front-%d-at-%d.csv",destination.c_str(),i,generation);
+            FILE *fd = fopen(filename,"w");
+            printFront(front[i],fd,printGene);
+            fclose(fd);
+
+            if (!saveAllFronts) break; //if saveAllFronts is True, just save front 0
+        }
+        
+    }        
 
 
 };
