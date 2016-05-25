@@ -84,6 +84,7 @@ public:
         printf("first calculateFrontRank...\n");
         calculateFrontRank(fronts);
         printf("first calculateFrontRank...DONE\n");
+        printFront(fronts[0]);
         fflush(stdout);
 
         //printAllFronts(fronts);
@@ -196,7 +197,7 @@ public:
             }
             
             //printAllFronts(fronts);
-            printFront(fronts[0],0);
+            printFront(fronts[0]);
             //printFront(fronts[1],1);
             fflush(stdout);
 
@@ -443,28 +444,21 @@ public:
         }    
     }
 
-    void initFromPopulation(imat &population,float initialPopulationProportion) {
-        //imat populations has in each row an individual, plain row_order
-        int tocopy = int(population.n_rows *initialPopulationProportion);
-        tocopy = (tocopy > npop)?npop:tocopy;
-        printf("population size:%d, external population size:%d, tocopy:%d, gensize=%d\n",npop,population.n_rows,tocopy,ngene);
+    void initFromPopulation(imat &individual,int initialIndividualCopies) {
+        int tocopy = (initialIndividualCopies > npop)?npop:initialIndividualCopies;
         
-        for (int i=0;i<tocopy;i++) {
-            for (int j=0;j<ngene;j++) {
-                genes[i][j] = population(i,j);
-            }    
+        //first copy genes to first inidivual
+        int k=0;
+        for (int i=0;i<individual.n_rows;i++) {
+            for (int j=0;j<individual.n_cols;j++) {
+                genes[0][k++] = individual(i,j);
+            }
         }    
-
-        for (int i=tocopy;i<npop;i++) {
-            randomizeGene(genes[i],minvalue_,maxvalue_);
-        }    
-
-        printf("minvalue %d, maxvalue %d\n",minvalue_,maxvalue_);
-        for (int i=0;i<npop;i++) {
-            for (int j=0;j<ngene;j++) {
-                assert(genes[i][j] >= minvalue_);
-                assert(genes[i][j] <= maxvalue_);
-            }    
+        
+        //secod mutate rest of
+        for (int i=1;i<tocopy;i++) {
+            copyTo(0,this,i);
+            mutate(genes[i]);
         }    
     }
     

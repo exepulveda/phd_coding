@@ -14,6 +14,17 @@ namespace pt = boost::property_tree;
 using namespace boost::property_tree;
 using namespace pt::json_parser;
 
+void mean_variance(rowvec &a,int n, double &mean, double &variance) {
+    double sum = 0;
+    double sq_sum = 0;
+    for(int i = 0; i < n; ++i) {
+       sum += a[i];
+       sq_sum += a[i] * a[i];
+    }
+    mean = sum / n;
+    variance = sq_sum / n - mean * mean;
+}
+
 BlockCavingProblem::BlockCavingProblem()
 {
     this->drawPoints = NULL;
@@ -121,8 +132,12 @@ void BlockCavingProblem::load(string filename)
     //MAT this->tonnage = rowvec(bm.n);
 
     //load nsr_average
-    //datafile = root["nsr_average"]["datafile"].asString();
-    //dataset = root["nsr_average"]["dataset"].asString();
+    datafile = pt.get<string>("nsr_average.datafile","");
+    dataset = pt.get<string>("nsr_average.dataset","");
+    
+    if (datafile.length() > 0) {
+        load_hdf5_vector(nsr_average, datafile, dataset);
+    }
 
     //load_hdf5_vector(nsr_average, datafile, dataset);
 
@@ -435,8 +450,8 @@ void BlockCavingProblem::calculateNSRTonnage(int *schedule,rowvec &npvDistributi
             
             nBlocksToExtract = units * schedule[index];
 
-            assert(nBlocksToExtract <= maxExtraction);
-            assert(nBlocksToExtract >= 0);
+            //assert(nBlocksToExtract <= maxExtraction);
+            //assert(nBlocksToExtract >= 0);
 
             int efectiveExtraction = dp->extraction(prevExtractions,nBlocksToExtract,blocks);
             
@@ -460,7 +475,7 @@ void BlockCavingProblem::calculateNSRTonnage(int *schedule,rowvec &npvDistributi
             }
             tonnagePeriod[p] += totalTonnageExtraction;
             
-            prevExtractions += blocks.size();
+            prevExtractions += efectiveExtraction;
         }
     }
     //printf("calculateNSRTonnage DONE\n");
@@ -763,18 +778,10 @@ void BlockCavingProblem::average_npv_variance(int *schedule,double &nsr, double 
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
-    totalTonnage.fill(0.0);
-    nsrSim.fill(0.0);
-    
     calculateNSRTonnage(schedule,nsrSim,totalTonnage);
     
     //mean and variance at once
-    nsr = mean(nsrSim);
-    
-    variance = 0.0;
-    for (int i=0;i<nsim;i++) {
-        variance += ((nsrSim[i] - nsr)*(nsrSim[i] - nsr)) / nsim;
-    }
+    mean_variance(nsrSim,nsim,nsr,variance);
 
     //deviation from production boundaries and target
     constrain = 0.0;

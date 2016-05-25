@@ -150,13 +150,13 @@ int main (int argc, char **argv) {
         caseEval = atoi(argv[4]);
     }
 
-    string initialPopulation;
+    string initialIndividual;
     if (argc > 5) {
-        initialPopulation = string(argv[5]);
+        initialIndividual = string(argv[5]);
     }
-    float initialPopulationProportion = 0.1; //10%
+    int initialIndividualCopies = int(popsize*0.1); //10%
     if (argc > 6) {
-        initialPopulationProportion = atof(argv[6]);
+        initialIndividualCopies = atoi(argv[6]);
     } 
 
     //delete destination folder
@@ -208,14 +208,14 @@ int main (int argc, char **argv) {
     
     population.setup(0,bcp.maxExtraction,1.0,mutation,mutationGenePbl,mutationEta,tournamentSize);
 
-    if (initialPopulation.length() == 0) {
+    if (initialIndividual.length() == 0) {
         printf("Initial population from random\n");
         population.randomize();
     } else {
-        printf("Initial population from external population\n");
+        printf("Initial individual from external solution\n");
         imat ipop;
-        ipop.load(initialPopulation,csv_ascii);
-        population.initFromPopulation(ipop,initialPopulationProportion);
+        ipop.load(initialIndividual,csv_ascii);
+        population.initFromPopulation(ipop,initialIndividualCopies);
     }
 
     vector<vector<int>> front = population.nsga2(generations);
