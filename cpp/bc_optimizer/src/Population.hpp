@@ -460,6 +460,10 @@ public:
             copyTo(0,this,i);
             mutate(genes[i]);
         }    
+
+        for (int i=tocopy;i<npop;i++) {
+            randomizeGene(genes[i],minvalue_,maxvalue_);            
+        }    
     }
     
 private:
