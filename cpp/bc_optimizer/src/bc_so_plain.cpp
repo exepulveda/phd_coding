@@ -41,7 +41,7 @@ void evaluateNSR(T *individual,double *objs, double *consts) {
     if (currentSimulation >= 0) {
         bcp.single_npv_tonnage_deviation(individual,nsr,constrain,currentSimulation);
     } else {
-        bcp.average_npv_tonnage(individual,nsr,constrain);
+        bcp.average_nsr_tonnage(individual,nsr,constrain);
     }
 
     //printf("nsr=%f,constrain=%f\n",nsr,constrain);

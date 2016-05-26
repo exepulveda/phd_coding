@@ -28,14 +28,14 @@ class BlockCavingProblem
         
         //single objective
         void single_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation,int sim = -1);
-        void average_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain);
-        void average_npv_tonnage(int *schedule,double &nsr, double &constrain);
+        void average_nsr_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain);
+        void average_nsr_tonnage(int *schedule,double &nsr, double &constrain);
         
         //multiobjective
         
-        void average_npv_cvar(int *schedule,double &nsr, double &cvar, double &constrain);
+        void average_nsr_cvar(int *schedule,double &nsr, double &cvar, double &constrain);
         void average_nsr_var(int *schedule,double &nsr, double &nsrVar, double &constrain);
-        void average_npv_variance(int *schedule,double &nsr, double &variance, double &constrain);
+        void average_nsr_variance(int *schedule,double &nsr, double &variance, double &constrain);
         
         void calculateNSRTonnage(int *schedule,rowvec &npvDistribution,rowvec &tonnage);
         

@@ -1,10 +1,10 @@
 /* NSGA-II routine (implementation of the 'main' function) */
 
-# include <vector>
-# include <stdio.h>
-# include <stdlib.h>
-# include <math.h>
-# include <unistd.h>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <unistd.h>
 #include <armadillo>
 #include <time.h>
 #include <sys/stat.h>
@@ -28,7 +28,7 @@ void evaluateNSRDeviation(T *individual,double *objs, double *consts) {
     double dev;
     double constrain;
     
-    bcp.average_npv_tonnage_deviation(individual,nsr,dev,constrain);
+    bcp.average_nsr_tonnage_deviation(individual,nsr,dev,constrain);
 
     objs[0] = nsr;
     objs[1] = -dev; //minimize
@@ -41,7 +41,7 @@ void evaluateNSRVariance(T *individual,double *objs, double *consts) {
     double var;
     double constrain;
     
-    bcp.average_npv_variance(individual,nsr,var,constrain);
+    bcp.average_nsr_variance(individual,nsr,var,constrain);
 
     objs[0] = nsr;
     objs[1] = -var; //minimize
@@ -54,10 +54,23 @@ void evaluateNSRCVaR(T *individual,double *objs, double *consts) {
     double cvar;
     double constrain;
     
-    bcp.average_npv_cvar(individual,nsr,cvar,constrain);
+    bcp.average_nsr_cvar(individual,nsr,cvar,constrain);
 
     objs[0] = nsr;
     objs[1] = cvar;
+    consts[0] = constrain;   
+}
+
+template<typename T>
+void evaluateNSRVaR(T *individual,double *objs, double *consts) {
+    double nsr;
+    double var;
+    double constrain;
+    
+    bcp.average_nsr_var(individual,nsr,var,constrain);
+
+    objs[0] = nsr;
+    objs[1] = var;
     consts[0] = constrain;   
 }
 
@@ -68,7 +81,7 @@ void evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
     double dev;
     double constrain;
     
-    bcp.average_npv_tonnage_deviation(individual,nsr,dev,constrain);
+    bcp.average_nsr_tonnage_deviation(individual,nsr,dev,constrain);
 
     objs[0] = nsr;
     objs[1] = -dev; //minimize
@@ -200,6 +213,9 @@ int main (int argc, char **argv) {
             evaluateFunction = &evaluateNSRVariance;
             break;
         case 3:
+            evaluateFunction = &evaluateNSRVaR;
+            break;
+        case 4:
             evaluateFunction = &evaluateNSRCVaR;
             break;
     }

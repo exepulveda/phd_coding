@@ -713,7 +713,7 @@ void BlockCavingProblem::single_npv_tonnage_deviation(int *schedule,double &nrs,
 
 }
 
-void BlockCavingProblem::average_npv_tonnage(int *schedule,double &nsr, double &constrain) {
+void BlockCavingProblem::average_nsr_tonnage(int *schedule,double &nsr, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
@@ -735,7 +735,7 @@ void BlockCavingProblem::average_npv_tonnage(int *schedule,double &nsr, double &
 }
 
 
-void BlockCavingProblem::average_npv_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain) {
+void BlockCavingProblem::average_nsr_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
@@ -774,7 +774,7 @@ void BlockCavingProblem::average_npv_tonnage_deviation(int *schedule,double &nsr
     */
 }
 
-void BlockCavingProblem::average_npv_variance(int *schedule,double &nsr, double &variance, double &constrain) {
+void BlockCavingProblem::average_nsr_variance(int *schedule,double &nsr, double &variance, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
@@ -794,7 +794,7 @@ void BlockCavingProblem::average_npv_variance(int *schedule,double &nsr, double 
     }
 }
 
-void BlockCavingProblem::average_npv_cvar(int *schedule,double &nsr, double &cvar, double &constrain) {
+void BlockCavingProblem::average_nsr_cvar(int *schedule,double &nsr, double &cvar, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
@@ -827,8 +827,7 @@ void BlockCavingProblem::average_npv_cvar(int *schedule,double &nsr, double &cva
     }
 }
 
-
-void BlockCavingProblem::average_nsr_var(int *schedule,double &nsr, double &nsrVar, double &constrain) {
+void BlockCavingProblem::average_nsr_var(int *schedule,double &nsr, double &var, double &constrain) {
     rowvec totalTonnage(this->nperiods);
     rowvec nsrSim(this->nsim);
     
@@ -837,11 +836,19 @@ void BlockCavingProblem::average_nsr_var(int *schedule,double &nsr, double &nsrV
     
     calculateNSRTonnage(schedule,nsrSim,totalTonnage);
     
-    //mean
+    //mean and variance at once
     nsr = mean(nsrSim);
-    //var
-    nsrVar = var(nsrSim);
+
+    //cvar
+    int location_risk_level = int(this->nsim*(1.0-this->confidenceInterval)); 
+    nsrSim = sort(nsrSim);
     
+    //cout << "nsrSim: " << nsrSim << endl;
+    //cout << "location_risk_level: " << location_risk_level << endl;
+    //cout << "nsr: " << nsr << ". cvar: " << cvar << endl;
+
+    var = nsrSim[location_risk_level];
+
     //deviation from production boundaries and target
     constrain = 0.0;
     for (int p=0;p<nperiods;p++) {
@@ -851,8 +858,8 @@ void BlockCavingProblem::average_nsr_var(int *schedule,double &nsr, double &nsrV
             constrain += (this->maxTonnage - totalTonnage[p]);
         }
     }
-    
 }
+
 /**
 void BlockCavingProblem::npv_prod_deviation(imat &schedule,double *objectives)
 {
