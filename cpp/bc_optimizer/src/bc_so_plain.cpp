@@ -19,7 +19,6 @@ using namespace arma;
 using namespace std;
 
 static BlockCavingProblem bcp;
-static int currentSimulation = -1;
 
 template<typename T>
 void individual2mat(T *individual, imat &schedule) {
@@ -38,13 +37,7 @@ void evaluateNSR(T *individual,double *objs, double *consts) {
     double nsr;
     double constrain;
     
-    if (currentSimulation >= 0) {
-        bcp.single_npv_tonnage_deviation(individual,nsr,constrain,currentSimulation);
-    } else {
-        bcp.average_nsr_tonnage(individual,nsr,constrain);
-    }
-
-    //printf("nsr=%f,constrain=%f\n",nsr,constrain);
+    bcp.single_npv_tonnage_deviation(individual,nsr,constrain,-1);
 
     objs[0] = nsr; 
     consts[0] = constrain;
@@ -121,15 +114,17 @@ int main (int argc, char **argv) {
             return(-3);
         }
     }
-        
+    
+    string datafile;
+    string dataset;
+    
     if (argc > 4) {
-        currentSimulation = atoi(argv[4]);
-    } else {
-        currentSimulation = -1;
-    }
-
-    if (argc > 5) {
-        caseEval = atoi(argv[5]);
+        datafile = string(argv[4]);
+        if (argc > 5) {
+            dataset = string(argv[5]);
+        } else {
+            dataset = "nsr";
+        }
     }
 
 
@@ -138,7 +133,13 @@ int main (int argc, char **argv) {
     printf("destination=%s...\n",argv[2]);
 
     printf("loading BCP problem config...\n");
-    bcp.load(config);
+    if (argc > 4) {
+        //dont load dataset from config
+        bcp.load(config,false);
+        bcp.setData(datafile,dataset);
+    } else {
+        bcp.load(config,true);
+    }
     printf("loading BCP problem config...DONE!\n");
     
     printf("Max threads %d\n",omp_get_max_threads());
@@ -149,20 +150,7 @@ int main (int argc, char **argv) {
     
     void (*evaluateFunction)(int *gene,double *objs, double *consts);
     
-    switch (caseEval) {
-        case 1:
-            evaluateFunction = &evaluateNSR;
-            break;
-        case 2:
-            evaluateFunction = &evaluateNSR;
-            break;
-        case 3:
-            evaluateFunction = &evaluateNSR;
-            break;
-        default:
-            evaluateFunction = &evaluateNSR;
-            break;
-    }
+    evaluateFunction = &evaluateNSR;
 
     Population<int> population(popsize,ndp*nperiods,1,1,evaluateFunction);
     

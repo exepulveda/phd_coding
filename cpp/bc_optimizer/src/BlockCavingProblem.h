@@ -17,9 +17,12 @@ class BlockCavingProblem
         BlockCavingProblem();
         virtual ~BlockCavingProblem();
 
-        void load(string filename);
+        void load(string filename,bool loadData = true);
         void setupDrawPoints(int ndp, Mat<int> & x);
         DrawPoint *getDrawPoint(int index);
+
+        void setData(string filename,string dsname);
+
 
         void npv(imat &schedule,double &objectives);
         void npv_tonage(imat &schedule,double *objectives);

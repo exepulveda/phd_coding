@@ -61,8 +61,7 @@ void BlockCavingProblem::setupPeriods(int periods, float discountRate) {
     }
 }
 
-void BlockCavingProblem::load(string filename)
-{
+void BlockCavingProblem::load(string filename,bool loadData) {
     string datafile;
     string dataset;
 
@@ -130,44 +129,14 @@ void BlockCavingProblem::load(string filename)
     //this->concentrates = new mat[n];
     //MAT this->nsr_average = rowvec(bm.n);
     //MAT this->tonnage = rowvec(bm.n);
-
-    //load nsr_average
-    datafile = pt.get<string>("nsr_average.datafile","");
-    dataset = pt.get<string>("nsr_average.dataset","");
     
-    if (datafile.length() > 0) {
-        load_hdf5_vector(nsr_average, datafile, dataset);
+    if (loadData) {
+        //load nsr_average
+        datafile = pt.get<string>("nsr_average.datafile","");
+        dataset = pt.get<string>("nsr_average.dataset","");
+        
+        setData(datafile,dataset);
     }
-
-    //load_hdf5_vector(nsr_average, datafile, dataset);
-
-    //load nsr
-    datafile = pt.get<string>("nsr.datafile"); //root["nsr"]["datafile"].asString();
-    dataset = pt.get<string>("nsr.dataset"); //root["nsr"]["dataset"].asString();
-
-    irowvec shape = hdf5_shape(datafile, dataset);
-    
-    if (shape.n_elem > 1) {
-        load_hdf5_matrix(nsr, datafile, dataset);
-        this->nsim = shape[1];
-        printf("nsr:\n");
-        for (int i=0;i<5;i++) {
-            for (int j=0;j<5;j++) {
-                printf("a[%d,%d]=%f\n",i,j,nsr(i,j));
-            }
-        }
-        printf("checksum=%f\n",mean(mean(nsr)));
-    } else {
-        load_hdf5_vector(nsr_average, datafile, dataset);
-        this->nsim = 0;
-        printf("nsr:\n");
-        for (int i=0;i<5;i++) {
-            printf("a[%d]=%f\n",i,nsr_average(i));
-        }
-        printf("checksum=%f\n",mean(nsr_average));            
-    }
-    printf("nsim=%d\n",nsim);
-    
 
     /*
     element = root["metals"]["cu"];
@@ -219,6 +188,34 @@ void BlockCavingProblem::load(string filename)
     
     printf("Loading OK\n");
 }
+
+void BlockCavingProblem::setData(string datafile,string dataset) {
+    irowvec shape = hdf5_shape(datafile, dataset);
+    
+    if (shape.n_elem > 1) {
+        load_hdf5_matrix(nsr, datafile, dataset);
+        this->nsim = shape[1];
+        printf("nsr:\n");
+        for (int i=0;i<5;i++) {
+            for (int j=0;j<5;j++) {
+                printf("a[%d,%d]=%f\n",i,j,nsr(i,j));
+            }
+        }
+        printf("checksum=%f\n",mean(mean(nsr)));
+    } else {
+        load_hdf5_vector(nsr_average, datafile, dataset);
+        this->nsim = 0;
+        printf("nsr:\n");
+        for (int i=0;i<5;i++) {
+            printf("a[%d]=%f\n",i,nsr_average(i));
+        }
+        printf("checksum=%f\n",mean(nsr_average));            
+    }
+    printf("nsim=%d\n",nsim);
+
+}
+
+
 void BlockCavingProblem::setupDrawPoints(int ndp, Mat<int> & x)
 {
     this->ndp = ndp;
