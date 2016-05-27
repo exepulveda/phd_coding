@@ -132,51 +132,11 @@ void BlockCavingProblem::load(string filename,bool loadData) {
     
     if (loadData) {
         //load nsr_average
-        datafile = pt.get<string>("nsr_average.datafile","");
-        dataset = pt.get<string>("nsr_average.dataset","");
+        datafile = pt.get<string>("nsr.datafile","");
+        dataset = pt.get<string>("nsr.dataset","");
         
         setData(datafile,dataset);
     }
-
-    /*
-    element = root["metals"]["cu"];
-
-    string name = element["name"].asString();
-
-    deduct[i] = element["deduct"].asFloat();
-    payableRate[i] = element["payableRate"].asFloat();
-    refiningCharge[i] = element["refiningCharge"].asFloat();
-    refiningCostConvertion[i] = 1.0;
-    price[i] = element["price"].asFloat();
-    */
-
-        //this->grades[i] = mat(bm.n,nsim);
-        //this->concentrates[i] = mat(bm.n,nsim);
-        //this->recovery[i] = mat(bm.n,nsim);
-        //this->nsr[i] = mat(bm.n,nsim);
-
-
-        //datafile = element["datafiles"]["grades"].asString();
-        //grades[i].load(datafile,hdf5_binary);
-        //inplace_trans(grades[i]);
-        //assert(grades[i].n_rows == bm.n);
-        //assert(grades[i].n_cols == nsim);
-
-        //datafile = element["datafiles"]["concentrates"].asString();
-        //concentrates[i].load(datafile,hdf5_binary);
-        //inplace_trans(concentrates[i]);
-        //assert(concentrates[i].n_rows == bm.n);
-        //assert(concentrates[i].n_cols == nsim);
-
-        //datafile = element["datafiles"]["nsr"].asString();
-        //nsr[i].load(datafile,hdf5_binary);
-        //inplace_trans(nsr[i]);
-        //assert(nsr[i].n_rows == bm.n);
-        //assert(nsr[i].n_cols == nsim);
-
-        //recovery[i].fill(0.85);
-
-    //}
 
     this->confidenceInterval = pt.get<float>("confidenceInterval"); //root["confidenceInterval"].asFloat();
     this->minTonnage = pt.get<float>("feed_production.minimum"); //root["feed_production"]["minimum"].asFloat();
@@ -585,6 +545,7 @@ void BlockCavingProblem::npv_tonage(imat &schedule,double *objectives)
     set<int> blockExtracted;
 
     int *blocks = new int[maxsize];
+    npv_total = 0;
 
     double totalTonnage = 0.0;
     for (int i=0;i<ndp;i++) {
@@ -731,44 +692,67 @@ void BlockCavingProblem::average_nsr_tonnage(int *schedule,double &nsr, double &
     }
 }
 
-
+/**
+ * Compute the average NSR and deviation from deviation
+ * 
+ * **/
 void BlockCavingProblem::average_nsr_tonnage_deviation(int *schedule,double &nsr, double &deviation, double &constrain) {
-    rowvec totalTonnage(this->nperiods);
-    rowvec nsrSim(this->nsim);
+    rowvec tonnagePeriod(this->nperiods);
     
-    totalTonnage.fill(0.0);
-    nsrSim.fill(0.0);
+    tonnagePeriod.fill(0.0);
+    nsr = 0;
     
-    calculateNSRTonnage(schedule,nsrSim,totalTonnage);
+    double totalTonnageExtraction;
+    double tmp_tonnage;
+    double discounted_tonnage;
+    int prevExtractions;
+    int nBlocksToExtract;
+    vector<int> blocks;
+    DrawPoint *dp;
+
+    for (int i=0;i<ndp;i++) {
+        
+        dp = getDrawPoint(i);
+        
+        prevExtractions = 0;
+        for (int p=0;p<nperiods;p++) {
+            int index = i*nperiods + p;
+            
+            nBlocksToExtract = units * schedule[index];
+
+            int efectiveExtraction = dp->extraction(prevExtractions,nBlocksToExtract,blocks);
+            
+            schedule[index] = efectiveExtraction; //fix
+
+            
+            totalTonnageExtraction = 0.0;
+            for (int blockid : blocks) {
+                tmp_tonnage = this->tonnage[blockid] / 1.0e3;
+                totalTonnageExtraction += tmp_tonnage;
+                discounted_tonnage = tmp_tonnage * discount[p] / 1.0e3;
+                
+                nsr += this->nsr_average[blockid] * discounted_tonnage;
+            }
+            tonnagePeriod[p] += totalTonnageExtraction;
+            
+            prevExtractions += efectiveExtraction;
+        }
+    }
     
-    nsr = mean(nsrSim);
     //deviation from production boundaries and target
     constrain = 0.0;
     deviation = 0.0;
     for (int p=0;p<nperiods;p++) {
-        if (totalTonnage[p] < this->minTonnage) {
-            constrain += (totalTonnage[p] - this->minTonnage);
-        } else if (totalTonnage[p] > this->maxTonnage) {
-            constrain += (this->maxTonnage - totalTonnage[p]);
+        if (tonnagePeriod[p] < this->minTonnage) {
+            constrain += (tonnagePeriod[p] - this->minTonnage);
+        } else if (tonnagePeriod[p] > this->maxTonnage) {
+            constrain += (this->maxTonnage - tonnagePeriod[p]);
         }
         //deviation
-        deviation += fabs(totalTonnage[p] - this->targetProduction);
+        deviation += fabs(tonnagePeriod[p] - this->targetProduction);
     }
     //deviation is the average over periods
     deviation = deviation / nperiods;
-    
-
-    /*
-    if (deviation >= 0) {
-        double m=0;
-        for (int s=0;s<this->nsim;s++) {
-            printf("%f|",nsr_sim(s));
-            m += nsr_sim(s);
-        }
-        m = m / this->nsim;
-        printf("|mean=%f\n",m);
-    }
-    */
 }
 
 void BlockCavingProblem::average_nsr_variance(int *schedule,double &nsr, double &variance, double &constrain) {
