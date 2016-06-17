@@ -78,7 +78,7 @@ class BlockCavingProblem(object):
 
         self.units = root["units"]
         self.max_block_extraction = root["max_block_extraction"]
-        self.production_targets = root["target_production"]
+        self.target_production = root["target_production"]
         self.risk_level = root["confidenceInterval"]
 
         self.minimum_feed_production = root["feed_production"]["minimum"]
@@ -157,6 +157,9 @@ class BlockCavingProblem(object):
         #logger.debug("recovery: %s",str(self.recovery[0,:,:,0]))
         #logger.debug("concentrates: %s",str(self.concentrates[0,:,:,0]))
         #logger.debug("production shape: %s",str(self.production[:10,0]))
+        
+    def compute_deviation(self,tonnage):
+        return np.mean(np.abs(tonnage - self.target_production))
         
     def compute_objectives(self,schedule):
         assert(schedule.shape == (self.ndp,self.nperiods))

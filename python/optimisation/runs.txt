@@ -21,8 +21,13 @@ python stats_solution.py --solution_file /home/esepulveda/Documents/projects/new
 #mean D optimum
 python stats_solution_A.py --solution_file /home/esepulveda/Documents/projects/newcrest/optimisation/opt_results/results-mean/so_mean_D-solution.mat --ipath ~/Documents/projects/newcrest/optimisation/nsr_results --param ../../cpp/pc1s1_D_average.json --nsr_file nsr_D_average.mat --nsr_ds nsr --nsr_simfile nsr_D.mat
 
+python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_std.csv --xlabel="Average NSR [k$] " --ylabel="Standard Deviation"
+
 
 #pareto front
-python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_std.csv --xlabel="Average NSR" --ylabel="Standard Deviation"
-python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_var.csv --xlabel="Average NSR" --ylabel="Value at Risk 90%"
-python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_cvar.csv --xlabel="Average NSR" --ylabel="Value at Risk 90%"
+python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_std.csv --xlabel="Average NSR [k$] " --ylabel="Standard Deviation"
+python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_var.csv --xlabel="Average NSR [k$]" --ylabel="Value at Risk 90%"
+python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_cvar.csv --xlabel="Average NSR [k$]" --ylabel="Conditional Value at Risk 90%"
+python plot_pareto_front.py < ~/Documents/projects/newcrest/optimisation/opt_results/nsr_dev.csv --xlabel="Average NSR [k$]" --ylabel="Deviation from Target [kTon]"
+
+

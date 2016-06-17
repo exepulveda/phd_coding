@@ -74,20 +74,6 @@ void evaluateNSRVaR(T *individual,double *objs, double *consts) {
     consts[0] = constrain;   
 }
 
-
-template<typename T>
-void evaluateNSRCVaRDeviation(T *individual,double *objs, double *consts) {
-    double nsr;
-    double dev;
-    double constrain;
-    
-    bcp.average_nsr_tonnage_deviation(individual,nsr,dev,constrain);
-
-    objs[0] = nsr;
-    objs[1] = -dev; //minimize
-    consts[0] = constrain;   
-}
-
 namespace pt = boost::property_tree;
 
 using namespace boost::property_tree;
